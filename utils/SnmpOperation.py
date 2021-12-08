@@ -1,7 +1,7 @@
 from pysnmp.hlapi import *
-import LogOperation
+from utils import LogOperation
 import time
-import datetime
+
 
 class OperationSnmp:
     """

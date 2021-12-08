@@ -1,7 +1,5 @@
-import SnmpOperation
 import json
-import LogOperation
-import TableOperation
+from utils import LogOperation, TableOperation, SnmpOperation
 import IPy
 
 class OperationRouter:
@@ -365,54 +363,6 @@ class OperationRouter:
         #print(routerAllInformationJson)
         return [routerAllInformationJson, routerAllInformationDict]
 
-
-class OperationRouters(OperationRouter):
-    """
-    涉及到多台路由器的相关操作
-    """
-
-    def getRouterNeighbor(self, *args, **kargs):
-        if (args):
-            resultIP = []
-            resultName = []
-            print("######################################")
-            print('当前位置为：')
-            print("######################################")
-            NexthopsList, NexthopsType = self.getRouterNexthopsListAndType()
-            for nexthop, nexthopType in list(zip(NexthopsList, NexthopsType)):
-                if (nexthop == '0.0.0.0' or nexthop == '127.0.0.1' or nexthop in resultIP):
-                    continue
-                else:
-                    rt = OperationRouter('1q3e!Q#E', nexthop, '161')
-                    nexthopName = rt.getRouterName()
-                    if (nexthopType == '3'):
-                        if (nexthopName in args[0]):
-                            continue
-                        else:
-                            resultIP.append(nexthop)
-                            resultName.append(nexthopName)
-            return [resultIP, resultName]
-        else:
-            resultIP = []
-            resultName = []
-            print("######################################")
-            print('设备IP为：')
-            localHostName = self.getRouterName()
-            print("######################################")
-            NexthopsList, NexthopsType = self.getRouterNexthopsListAndType()
-            for nexthop, nexthopType in list(zip(NexthopsList, NexthopsType)):
-                if (nexthop == '0.0.0.0' or nexthop == '127.0.0.1' or nexthop in resultIP):
-                    continue
-                else:
-                    rt = OperationRouter('1q3e!Q#E', nexthop, '161')
-                    nexthopName = rt.getRouterName()
-                    if (nexthopType == '3'):
-                        if (nexthopName == localHostName):
-                            continue
-                        else:
-                            resultIP.append(nexthop)
-                            resultName.append(nexthopName)
-            return (list(zip(resultIP, resultName)))
 
 
 def main():

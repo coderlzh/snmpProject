@@ -1,8 +1,6 @@
-import MysqlOperation
-import NetworkOperation
-import re
+from utils import MysqlOperation, NetworkOperation
 import time
-import json
+
 
 class OperationTable:
     """
@@ -287,19 +285,6 @@ class OperationTable:
             Operation = MysqlOperation.OperationMysql()
             res = Operation.insert_all(sql, data)
             #print(res)
-        # def databaseSelect(name):
-        #     sql = "select * from network_info where UniqueID = '%s'" % (name)
-        #     Operation = MysqlOperation.OperationMysql()
-        #     res = Operation.search_one(sql)
-        #     return [res['UniqueID'],res['NETWORK'],res['IP'],res['SYSNAME'],res['MAC'],res['PRODUCER'],res['IPTYPE']]
-        #     #return [res['PARENTNETWORK'],res['NETWORK'],res['NETMASK'],res['STARTIP'],res['ENDIP'],res['BROAIP'],res['NETIP'],res['IPNUM'],res['USED'],res['FREE']]
-
-        # def networkIDGET(network):
-        #     sql = "select ID from networkinformation where network = '%s'" %(network)
-        #     #print(sql)
-        #     Operation = MysqlOperation.OperationMysql()
-        #     res = Operation.search_one(sql)
-        #     return res['ID']
         def dfs(dataDict: dict,parentNetwork:str):
             data.append([parentNetwork+dataDict['name'],parentNetwork,dataDict['name'], dataDict['netmask'], dataDict['startip'], dataDict['endip'], dataDict['broip'],
             dataDict['netip'], dataDict['total'], dataDict['used'], dataDict['free']])
@@ -308,38 +293,80 @@ class OperationTable:
                     dfs(child,dataDict['name'])
             except:
                 return
+
+        def getDiffDataList(databaseInfoDict,data):
+            updateList = []
+            insertList = []
+            for info in data:
+                info = [str(i) for i in info]
+                try:
+                    if databaseInfoDict[info[0]] != '&'.join(info):
+                        updateList.append(info)
+                except:
+                    insertList.append(info)
+            return updateList,insertList
+
         def changeNetDeviceInfo2data(dataDict):
             for network,networkDiCT in dataDict.items():
                 for IP,IPInfo in networkDiCT['networkDevice'].items():
                     for i in IPInfo.split('&'):
                         iList = i.split('/ ')
-                        data.append([network+IP+iList[1],network,IP]+iList+[1])
+                        data.append([network+IP+iList[1],network,IP]+iList+['1'])
                 for IP,IPInfo in networkDiCT['host'].items():
                     for i in IPInfo.split('&'):
                         iList = i.split('/ ')
-                        data.append([network+IP+iList[0],network,IP,'']+iList+[0])
-        net = NetworkOperation.OperationNetwork('./networkInformation.txt')
+                        data.append([network+IP+iList[0],network,IP,'']+iList+['0'])
+        net = NetworkOperation.OperationNetwork('../logs/networkInformation.txt')
         netDeviceInformationDict,superNetworkInformationDict = net.getNetDeviceInformationTreeDict()
-        #print(json.dumps(netDeviceInformationDict, ensure_ascii='utf-8', indent=4))
         data = []
         dfs(superNetworkInformationDict,'startPoint')
+        databaseInfoDict = self.networkInfoDictGET()
+        print(databaseInfoDict)
+        dictUpdateList,dictInsertList = getDiffDataList(databaseInfoDict,data)
         networkInfoDictPOST(data)
         data = []
         changeNetDeviceInfo2data(netDeviceInformationDict)
+        databaseInfoDict = self.networkDeviceDictGET()
+        infoUpdateList, infoInsertList = getDiffDataList(databaseInfoDict, data)
         networkInfoPOST(data)
+        return dictUpdateList,dictInsertList,infoUpdateList, infoInsertList
+
+    def networkDeviceDictGET(self):
+        sql = "select * from network_info"
+        #print(sql)
+        Operation = MysqlOperation.OperationMysql()
+        resList = Operation.search_all(sql)
+        resDict = {}
+        for res in resList:
+            valueList = []
+            for key,value in res.items():
+                valueList.append(str(value))
+            resDict[res['UniqueID']] = '&'.join(valueList)
+        return resDict
+
+    def networkInfoDictGET(self):
+        sql = "select * from network_info_dict"
+        #print(sql)
+        Operation = MysqlOperation.OperationMysql()
+        resList = Operation.search_all(sql)
+        resDict = {}
+        for res in resList:
+            valueList = []
+            for key,value in res.items():
+                valueList.append(str(value))
+            resDict[res['UNIQUEID']] = '&'.join(valueList)
+        return resDict
 
     def monitoringItemTypeGET(self):
         sql = 'SELECT itemid FROM history GROUP BY itemid;'
         Operation = MysqlOperation.OperationMysql()
         res = Operation.search_all(sql)
-        print(res)
+        return res
 
 def main():
     to = OperationTable()
     #to.createTableTerminalSnmpUnenabled()
-    to.monitoringItemTypeGET()
-    # to.selectFromDatabase()
-
+    #print(to.networkInfoDictGET())
 
 if __name__ == '__main__':
     main()

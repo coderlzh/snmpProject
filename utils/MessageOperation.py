@@ -65,7 +65,7 @@ class OperationMessage:
         message['type'] = 'note'
         message['content'] = '网络设备信息更新完毕，请注意检查。'
         message['receiver'] = '18344971196'
-        #receiver ='|'.join(reciverlist)
+        #message['receiver'] ='|'.join(reciverlist)
         return message
 
     def messageProcess(self,message):

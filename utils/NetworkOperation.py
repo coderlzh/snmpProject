@@ -1,10 +1,5 @@
 import IPy
 import json
-import LogOperation
-import re
-import copy
-
-
 
 
 class OperationNetwork:
@@ -37,7 +32,7 @@ class OperationNetwork:
         解析Json文本并返回MAC地址与厂家对应表
         :return: type=字典 data={mac:厂家}
         """
-        with open('./mac.log', 'r+') as f:
+        with open('../logs/mac.log', 'r+') as f:
             macInfromationDict = json.loads(f.read())
         return macInfromationDict
 

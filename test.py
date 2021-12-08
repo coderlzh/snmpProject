@@ -813,3 +813,12 @@
 #     partitions = consumer.partitions_for_topic(topic)
 #     return len(partitions)
 # print(get_partitions_number('10.46.97.234:9092','network'))
+from utils import KafkaOperation
+import json
+
+
+kf = KafkaOperation.OperationKafka()
+consumer = kf.createKafkaConsumer('10.46.97.234:9092',topic='SendMes')
+for msg in consumer:
+    MessageDict = json.loads(msg.value.decode('utf-8'))
+    print(MessageDict)

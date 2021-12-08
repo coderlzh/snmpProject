@@ -12,30 +12,29 @@ class OperationLog:
 
     def logPrint(self, string):
         try:
-            with open('./snmp-python.log', 'a+') as f:
+            with open('../logs/snmp-python.log', 'a+') as f:
                 f.write(string + '\n')
         except:
-            os.mknod("./snmp-python.log")
-            with open('./snmp-python.log', 'a+') as f:
+            os.mknod("../logs/snmp-python.log")
+            with open('../logs/snmp-python.log', 'a+') as f:
                 f.write(string + '\n')
 
     def networkJsonPrint(self, string):
         try:
-
-            with open('./networkInformation.txt', 'w') as f:
+            with open('../logs/networkInformation.txt', 'w') as f:
                 f.write(string + '\n')
         except:
-            os.mknod("./networkInformation.txt")
-            with open('./networkInformation.txt', 'w') as f:
+            os.mknod("../logs/networkInformation.txt")
+            with open('../logs/networkInformation.txt', 'w') as f:
                 f.write(string + '\n')
 
     def resultPrint(self, string):
         try:
-            with open('./result.txt', 'w') as f:
+            with open('../logs/result.txt', 'w') as f:
                 f.write(string + '\n')
         except:
-            os.mknod("./result.txt")
-            with open('./result.txt', 'w') as f:
+            os.mknod("../logs/result.txt")
+            with open('../logs/result.txt', 'w') as f:
                 f.write(string + '\n')
 
     def getWhiteListIP(self, filepath):

@@ -1,7 +1,7 @@
 import requests
 import json
-import LogOperation
-import threading
+from utils import LogOperation
+
 
 class OprationCMDB:
 

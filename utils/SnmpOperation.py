@@ -1,7 +1,9 @@
 from pysnmp.hlapi import *
 from utils import LogOperation
 import time
+from utils import LogOperation
 
+log = LogOperation.OperationLog()
 
 class OperationSnmp:
     """
@@ -13,6 +15,7 @@ class OperationSnmp:
         self.target = target
         self.port = port
 
+    @log.classFuncDetail2Log('DEBUG')
     def walk(self,oidList):
         """
         :param oidList:OID列表
@@ -47,10 +50,11 @@ class OperationSnmp:
                 for i in range(len(varBinds)):
                     result[i].append(varBinds[i][1].prettyPrint())
                     #result[i].append(' = '.join([x.prettyPrint() for x in varBinds[i]]))
-                    log.logPrint(' = '.join([x.prettyPrint() for x in varBinds[i]]))
+                    #log.logPrint(' = '.join([x.prettyPrint() for x in varBinds[i]]))
                     #print(' = '.join([x.prettyPrint() for x in varBinds[i]]))
         return result
 
+    @log.classFuncDetail2Log('DEBUG')
     def getbulk(self,oidList):
         """
         :param oidList: OID列表

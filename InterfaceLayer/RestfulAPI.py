@@ -15,7 +15,6 @@ def DBNetworkInfoFlush():
     Time = ToolOperation.getTime()
     producer.send('network', value={'timestamp': Time,'targetFunc':'networkFlush'})
     ren = {'code': 200, 'msg': '正在完整更新网络设备信息表，更新完毕将以短信形式通知'}
-    # json.dumps 序列化时对中文默认使用的ascii编码.想输出中文需要指定ensure_ascii=False
     return json.dumps(ren, ensure_ascii=False)
 
 if __name__ == '__main__':

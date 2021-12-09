@@ -1,6 +1,8 @@
 from utils import MysqlOperation, NetworkOperation
 import time
+from utils import LogOperation
 
+log = LogOperation.OperationLog()
 
 class OperationTable:
     """
@@ -10,6 +12,7 @@ class OperationTable:
     def __init__(self):
         pass
 
+    @log.classFuncDetail2Log('DEBUG')
     def dropExsistTable(self, table):
         sql = 'drop table if exists %s' % (table)
         Operation = MysqlOperation.OperationMysql()
@@ -17,6 +20,7 @@ class OperationTable:
         if (res):
             return res
 
+    @log.classFuncDetail2Log('DEBUG')
     def createTableEquipmentSysInformation(self):
         Operation = MysqlOperation.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS equipmentSysInformation%s(\
@@ -40,6 +44,7 @@ class OperationTable:
             print(res)
             return 1
 
+    @log.classFuncDetail2Log('DEBUG')
     def createTableEquipmentInterfaceInformation(self):
         Operation = MysqlOperation.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS equipmentInterfaceInformation%s(\
@@ -64,6 +69,7 @@ class OperationTable:
             print(res)
             return 1
 
+    @log.classFuncDetail2Log('DEBUG')
     def createTableEquipmentRouterInformation(self):
         Operation = MysqlOperation.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS equipmentRouterInformation%s(\
@@ -84,6 +90,7 @@ class OperationTable:
             print(res)
             return 1
 
+    @log.classFuncDetail2Log('DEBUG')
     def createTableEquipment2equipment(self):
         Operation = MysqlOperation.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS equipment2equipment%s(\
@@ -105,6 +112,7 @@ class OperationTable:
             print(res)
             return 1
 
+    @log.classFuncDetail2Log('DEBUG')
     def createTableTerminalSnmpUnenabled(self):
         Operation = MysqlOperation.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS terminalSnmpUnenabled(\
@@ -120,11 +128,13 @@ class OperationTable:
             print(res)
             return 1
 
+    @log.classFuncDetail2Log('DEBUG')
     def createTableAll(self):
         if (
                 self.createTableEquipmentInterfaceInformation() or self.createTableEquipmentSysInformation() or self.createTableEquipmentRouterInformation() or self.createTableEquipment2equipment() or self.createTableTerminalSnmpUnenabled()):
             return 'Create all table failed!'
 
+    @log.classFuncDetail2Log('DEBUG')
     def insertDictionary2Database(self, Dict):
         sysName = Dict['equipmentSysInformation']['sysName']
         for tableName in Dict:
@@ -231,6 +241,7 @@ class OperationTable:
                 else:
                     print('insert data to %s%s successfully' % (tableName, time.strftime('%Y%m%d')))
 
+    @log.classFuncDetail2Log('DEBUG')
     def insertSysName2Database(self, Sysname):
         sql = "insert into equipmentSysInformation%s(sysSnID,sysName) values ('%s','%s') ON DUPLICATE KEY UPDATE sysSnID = VALUES(sysSnID),sysName=VALUES(sysName) " % (
             time.strftime('%Y%m%d'), 'Unknown' + Sysname, Sysname)
@@ -240,12 +251,14 @@ class OperationTable:
         if (res):
             print(res)
 
+    @log.classFuncDetail2Log('DEBUG')
     def selectFromDatabaseGroupByParam(self, table, param):
         sql = 'SELECT %s FROM %s group by %s;' % (param, table, param)
         Operation = MysqlOperation.OperationMysql()
         res = Operation.search_all(sql)
         return res
 
+    @log.classFuncDetail2Log('DEBUG')
     def selectFromDatabase(self, table):
         sql = 'SELECT * FROM %s;' % (table)
         Operation = MysqlOperation.OperationMysql()
@@ -254,6 +267,7 @@ class OperationTable:
         # print(res[0]['id'])
         # print(res[2]['id'])
 
+    @log.classFuncDetail2Log('DEBUG')
     def insertTreeDict2Database(self):
         """
         "name": "0.0.0.0/0"
@@ -268,6 +282,7 @@ class OperationTable:
         :return:
         """
 
+        @log.classFuncDetail2Log('DEBUG')
         def networkInfoDictPOST(data):
             sql = "insert into network_info_dict (UNIQUEID,PARENTNETWORK,NETWORK,NETMASK,STARTIP,ENDIP,BROAIP,NETIP,IPNUM,USED,FREE) \
             values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE \
@@ -277,6 +292,7 @@ class OperationTable:
             res = Operation.insert_all(sql, data)
             #print(res)
 
+        @log.classFuncDetail2Log('DEBUG')
         def networkInfoPOST(data):
             sql = "insert into network_info (UNIQUEID,NETWORK,IP,SYSNAME,MAC,PRODUCER,IPTYPE) \
             values (%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE \
@@ -285,6 +301,8 @@ class OperationTable:
             Operation = MysqlOperation.OperationMysql()
             res = Operation.insert_all(sql, data)
             #print(res)
+
+        @log.classFuncDetail2Log('DEBUG')
         def dfs(dataDict: dict,parentNetwork:str):
             data.append([parentNetwork+dataDict['name'],parentNetwork,dataDict['name'], dataDict['netmask'], dataDict['startip'], dataDict['endip'], dataDict['broip'],
             dataDict['netip'], dataDict['total'], dataDict['used'], dataDict['free']])
@@ -294,6 +312,7 @@ class OperationTable:
             except:
                 return
 
+        @log.classFuncDetail2Log('DEBUG')
         def getDiffDataList(databaseInfoDict,data):
             updateList = []
             insertList = []
@@ -306,6 +325,7 @@ class OperationTable:
                     insertList.append(info)
             return updateList,insertList
 
+        @log.classFuncDetail2Log('DEBUG')
         def changeNetDeviceInfo2data(dataDict):
             for network,networkDiCT in dataDict.items():
                 for IP,IPInfo in networkDiCT['networkDevice'].items():
@@ -331,6 +351,7 @@ class OperationTable:
         networkInfoPOST(data)
         return dictUpdateList,dictInsertList,infoUpdateList, infoInsertList
 
+    @log.classFuncDetail2Log('DEBUG')
     def networkDeviceDictGET(self):
         sql = "select * from network_info"
         #print(sql)
@@ -344,6 +365,7 @@ class OperationTable:
             resDict[res['UniqueID']] = '&'.join(valueList)
         return resDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def networkInfoDictGET(self):
         sql = "select * from network_info_dict"
         #print(sql)
@@ -357,6 +379,7 @@ class OperationTable:
             resDict[res['UNIQUEID']] = '&'.join(valueList)
         return resDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def monitoringItemTypeGET(self):
         sql = 'SELECT itemid FROM history GROUP BY itemid;'
         Operation = MysqlOperation.OperationMysql()

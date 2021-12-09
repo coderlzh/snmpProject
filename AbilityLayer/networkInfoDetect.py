@@ -14,7 +14,6 @@ def excuteByInterface(community='1q3e!Q#E',target='10.46.79.126',port='161'):
             rt = RouterOperation.OperationRouter('1q3e!Q#E', NeighborIP, '161')
             try:
                 dataJson, dataDict = rt.getRouterAllInformation(whiteList=[])
-                log.logPrint(dataJson)
                 networkDict[NeighborName] = dataDict
                 # cm.AllInformationPOST(dataDict)
                 # tb.insertDictionary2Database(dataDict)
@@ -32,11 +31,10 @@ def excuteByInterface(community='1q3e!Q#E',target='10.46.79.126',port='161'):
                     continue
                 else:
                     neighborDiscovery.append(router)
-            print(neighborDiscovery)
         else:
             # tb.insertSysName2Database(NeighborIP)
             continue
-    log.logPrint(str(neighborDiscovery))
+    #log.logPrint(str(neighborDiscovery))
     log.resultPrint(str(neighborDiscovery))
     log.networkJsonPrint(json.dumps(networkDict, ensure_ascii=False, indent=4))
 
@@ -91,7 +89,7 @@ def main():
         else:
             #tb.insertSysName2Database(NeighborIP)
             continue
-    log.logPrint(str(neighborDiscovery))
+    #log.logPrint(str(neighborDiscovery))
     log.resultPrint(str(neighborDiscovery))
     log.networkJsonPrint(json.dumps(networkDict, ensure_ascii=False, indent=4))
 

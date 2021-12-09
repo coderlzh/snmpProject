@@ -21,8 +21,6 @@ def main():
             ReceiverList = []
             MessageSendFinal = ms.sendMessage2Kafka(ReceiverList)
             MessageJson = ms.message2json(MessageSendFinal)
-            log = LogOperation.OperationLog()
-            log.logPrint(MessageDict['timestamp'] + '      Message %s will be sent to kafka \n' % (MessageJson))
             producer = kf.createKafkaProducer('10.46.97.234:9092')
             producer.send('SendMes', MessageSendFinal)
 

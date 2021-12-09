@@ -813,12 +813,29 @@
 #     partitions = consumer.partitions_for_topic(topic)
 #     return len(partitions)
 # print(get_partitions_number('10.46.97.234:9092','network'))
-from utils import KafkaOperation
-import json
+# from utils import KafkaOperation
+# import json
 
 
-kf = KafkaOperation.OperationKafka()
-consumer = kf.createKafkaConsumer('10.46.97.234:9092',topic='SendMes')
-for msg in consumer:
-    MessageDict = json.loads(msg.value.decode('utf-8'))
-    print(MessageDict)
+# kf = KafkaOperation.OperationKafka()
+# consumer = kf.createKafkaConsumer('10.46.97.234:9092',topic='SendMes')
+# for msg in consumer:
+#     MessageDict = json.loads(msg.value.decode('utf-8'))
+#     print(MessageDict)
+
+
+from utils import LogOperation
+log = LogOperation.OperationLog()
+class A(object):
+    def __init__(self):
+        self.name = 'A'
+        self.value = 1
+
+    @log.classFuncDetail2Log('DEBUG')
+    def foo(self,x,param=2):
+        print(x)
+        print(self.name + 'foo')
+        return 1
+
+a =A()
+print(a.foo(1,param = 3))

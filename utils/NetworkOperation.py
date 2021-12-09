@@ -1,6 +1,8 @@
 import IPy
 import json
+from utils import LogOperation
 
+log = LogOperation.OperationLog()
 
 class OperationNetwork:
     """
@@ -18,6 +20,7 @@ class OperationNetwork:
         self.edgeDeviceInformationDict = None
         self.macInformationDict = None
 
+    @log.classFuncDetail2Log('DEBUG')
     def getNetworkDict(self) -> dict:
         """
         解析Json文本并返回采集到的全网信息
@@ -27,6 +30,7 @@ class OperationNetwork:
             networkDict = json.loads(f.read())
         return networkDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def getMacInfromationDict(self) -> dict:
         """
         解析Json文本并返回MAC地址与厂家对应表
@@ -36,6 +40,7 @@ class OperationNetwork:
             macInfromationDict = json.loads(f.read())
         return macInfromationDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def checkIP(self, ipaddress:str) -> bool:
         """
         检查入参IP的合法性，对于非IP类型的字符串和特殊类型IP，比如127.0.0.1和0.0.0.0返回False
@@ -50,6 +55,7 @@ class OperationNetwork:
         except Exception as e:
             return False
 
+    @log.classFuncDetail2Log('DEBUG')
     def checkTypeOfParam(self, param: str) -> str:
         """
         检查参数类型，将字符串整理并分类为 'IP' 'NETWORK' 'Unvalid Param' 'SYSNAME'四类
@@ -71,6 +77,7 @@ class OperationNetwork:
             else:
                 return 'Unvalid Param'
 
+    @log.classFuncDetail2Log('DEBUG')
     def getVrrpDeviceDict(self) -> None:
         """
         获取网络中存在的虚拟网段IP和对应的设备，目前这个函数做的还不准，后续看有没有办法完善吧
@@ -114,6 +121,7 @@ class OperationNetwork:
                         continue
         #print(json.dumps(self.vrrpDeviceStatic, ensure_ascii='utf-8', indent=4))
 
+    @log.classFuncDetail2Log('DEBUG')
     def getInformationOfparam(self, param: str, paramType: str) -> list:
         """
         根据参数和参数类型获取参数对应的 设备名称,SNID,IP 用来在路径发现中进行一个路径的寻找
@@ -162,6 +170,7 @@ class OperationNetwork:
         else:
             return [param, '' , '', paramType]
 
+    @log.classFuncDetail2Log('DEBUG')
     def getDeviceNetInformationFromDict(self, sysname: str) -> dict:
         """
         获取设备各接口及其对应网段信息
@@ -177,6 +186,7 @@ class OperationNetwork:
                     netDeviceInformationDict[IPy.IP(InterfaceDict['interfaceIP']).make_net(InterfaceDict['interfaceNetmask']).strNormal(1)] = InterfaceDict['interfaceIP']
         return netDeviceInformationDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def getNetInformationFromDict(self) -> dict:
         """
         根据路由表获取全网的网段信息，可以获得到逻辑上存在的网络以及前往对应网路的设备SYSNAME及接口IP
@@ -195,6 +205,7 @@ class OperationNetwork:
                         netInformationDict[temp] = {sysname: routerDict['routerIfIP']}
         return netInformationDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def getNetInformationBeSelected(self, netBeSelected: str) -> dict:
         """
         获取特定网段的信息
@@ -209,6 +220,7 @@ class OperationNetwork:
                 netInformationBeSelected[net] = netDict
         return netInformationBeSelected
 
+    @log.classFuncDetail2Log('DEBUG')
     def getNetDirectInformationFromDict(self) -> dict:
         """
         根据设备接口表获取设备的直连网段信息，非路由表。
@@ -227,6 +239,7 @@ class OperationNetwork:
                         netDirectInformationDict[temp] = {sysname: interfaceDict["interfaceIP"]}
         return netDirectInformationDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def getNetDirectInformationBeSelected(self, netBeSelected: str) -> dict:
         """
         获取特定直连网段的信息
@@ -241,6 +254,7 @@ class OperationNetwork:
                 netDirectInformationBeSelected[net] = netDict
         return netDirectInformationBeSelected
 
+    @log.classFuncDetail2Log('DEBUG')
     def __getIFDestinationIPInDirect(self, ipaddress: str , dataDict: dict) -> str:
         """
         用来判断目标IP在设备的MAC表中是否有相关的类型，这是对于一些设备不会产生自己接口对应直连网段的路由信息而导致在寻找直连设备
@@ -253,6 +267,7 @@ class OperationNetwork:
             if (ipaddress == key):
                 return ipaddress
 
+    @log.classFuncDetail2Log('DEBUG')
     def getWhichRouterDestinationIPIn(self, ipaddress: str, dataDict: dict) -> str:
         """
         获取目标IP所在路由并返回下一跳
@@ -291,6 +306,7 @@ class OperationNetwork:
                         result = routerDict['routerNextHop']
         return result
 
+    @log.classFuncDetail2Log('DEBUG')
     def pathTraceIP(self, sourceDict:dict, destinationDict:dict) -> list:
         """
         同traceroute，返回值第4位为0表示路径不成立，为1表示路径成立
@@ -348,6 +364,7 @@ class OperationNetwork:
         else:
             return [IPList, sysNameList, SNIDList, 0]
 
+    @log.classFuncDetail2Log('DEBUG')
     def getSNIDBySysName(self, param: str) -> str:
         """
         根据设备的sysName获取设备的SNID
@@ -363,7 +380,7 @@ class OperationNetwork:
         except:
             return ''
 
-
+    @log.classFuncDetail2Log('DEBUG')
     def tracertToDestination(self,sourceDict,destinationType,destination):
         if not self.networkDict:
             self.networkDict = self.getNetworkDict()
@@ -412,6 +429,7 @@ class OperationNetwork:
                 return minimumIPList, minimumsysNameList, minimumSNIDList
         return minimumIPList, minimumsysNameList, minimumSNIDList
 
+    @log.classFuncDetail2Log('DEBUG')
     def pathTrace(self, source, destination):
         print('正在寻找 %s 到 %s 经过的设备......' % (source, destination))
         result = []
@@ -447,6 +465,7 @@ class OperationNetwork:
             sourceDict = {'Sysname': sourceSysname, 'IP': sourceIP[0], 'SNID': sourceSNID}
             return self.tracertToDestination(sourceDict, destinationType, destination)
 
+    @log.classFuncDetail2Log('DEBUG')
     def getDeviceConnectedDict(self,param:str) -> dict:
         """
         获取设备直连的设备
@@ -461,7 +480,7 @@ class OperationNetwork:
                 netDict[NETWORK] = netDirectInformationBeSelected
         return netDict
 
-
+    @log.classFuncDetail2Log('DEBUG')
     def getEdgeNetInformationDict(self):
         if not self.netDirectInformationDict:
             self.netDirectInformationDict = self.getNetDirectInformationFromDict()
@@ -472,6 +491,7 @@ class OperationNetwork:
                edgeNetInformationDict[key] = self.netDirectInformationDict[key]
         return edgeNetInformationDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def getCommonPrefixLength(self,string1,string2):
         length = 0
         for i in range(len(string1)):
@@ -481,6 +501,7 @@ class OperationNetwork:
                 break
         return length
 
+    @log.classFuncDetail2Log('DEBUG')
     def getLongestCommonPrefix(self,strs):
         """
         :type strs: List[str]
@@ -497,6 +518,7 @@ class OperationNetwork:
                 return [s1[:i],i]
         return [s1,len(s1)]
 
+    @log.classFuncDetail2Log('DEBUG')
     def getSuperNetworkInformationDict(self, netList, prefixList):
         superNetworkInformationDict ={}
         [commonPrefix,preLen] = self.getLongestCommonPrefix(netList)
@@ -525,7 +547,7 @@ class OperationNetwork:
             superNetworkInformationDict['children'].append(self.getSuperNetworkInformationDict(part1List,part1PreList))
             return superNetworkInformationDict
 
-
+    @log.classFuncDetail2Log('DEBUG')
     def comboSuperNetAndDeviceInformation(self,superNetworkInformationDict: dict,deviceInformationDict: dict) ->dict:
         """
         组合父网段信息和网段设备信息形成可以载入数据库的字典
@@ -573,7 +595,7 @@ class OperationNetwork:
         dfs(superNetworkInformationDict)
         return superNetworkInformationDict
 
-
+    @log.classFuncDetail2Log('DEBUG')
     def getEdgeDeviceInformationTreeDict(self):
         edgeDeviceInformationDict = {}
         if not self.edgeNetInformationDict:
@@ -630,6 +652,7 @@ class OperationNetwork:
         self.comboSuperNetAndDeviceInformation(superNetworkInformationDict,edgeDeviceInformationDict)
         return edgeDeviceInformationDict,superNetworkInformationDict
 
+    @log.classFuncDetail2Log('DEBUG')
     def getNetDeviceInformationTreeDict(self):
         netDeviceInformationDict = {}
         if not self.netDirectInformationDict:
@@ -692,7 +715,7 @@ class OperationNetwork:
         #print(json.dumps(netDeviceInformationDict, ensure_ascii='utf-8', indent=4))
         return netDeviceInformationDict,superNetworkInformationDict
 
-
+    @log.classFuncDetail2Log('DEBUG')
     def compareDevicesLevel(self,paramONE,paramTWO,preList=None):
         if not self.netDirectInformationDict:
             self.netDirectInformationDict = self.getNetDirectInformationFromDict()

@@ -6,6 +6,12 @@ def getTime():
     otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
     return otherStyleTime
 
+def getDate():
+    now = int(time.time())
+    timeArray = time.localtime(now)
+    otherStyleTime = time.strftime("%Y%m%d", timeArray)
+    return otherStyleTime
+
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import os
 import re
-
+import traceback
+from utils import ToolOperation
 
 class OperationLog:
     """
@@ -10,13 +11,30 @@ class OperationLog:
     def __init__(self):
         pass
 
+    def classFuncDetail2Log(self,prefix):
+        def decorator(func):
+            def wrapper(*args, **kargs):
+                self.logPrint('['+ ToolOperation.getTime()  +'] ' + prefix + ' || FUNCTION {'+ func.__name__ + '} IN CLASS {' + args[0].__class__.__name__ +'} BE EXCUTED.' )
+                try:
+                    res = func(*args, **kargs)
+                    self.logPrint(
+                        '[' + ToolOperation.getTime() + '] ' + prefix + ' || FUNCTION {' + func.__name__ + '} IN CLASS {' + args[0].__class__.__name__ + '} EXCUTE SUCCESSFULLY. ')
+                    return res
+                except:
+                    self.logPrint(
+                        '[' + ToolOperation.getTime() + '] ' + 'WARN || FUNCTION {' + func.__name__ + '} IN CLASS {' + args[0].__class__.__name__ + '} EXCUTE FAILED UNEXPECTLY. RAISE THE ERROE : \n' + traceback.format_exc())
+            return wrapper
+        return decorator
+
     def logPrint(self, string):
+        filePath = '../logs/snmp-python' + ToolOperation.getDate() + '.log'
+        print(string)
         try:
-            with open('../logs/snmp-python.log', 'a+') as f:
+            with open(filePath, 'a+') as f:
                 f.write(string + '\n')
         except:
-            os.mknod("../logs/snmp-python.log")
-            with open('../logs/snmp-python.log', 'a+') as f:
+            os.mknod(filePath)
+            with open(filePath, 'a+') as f:
                 f.write(string + '\n')
 
     def networkJsonPrint(self, string):
@@ -50,7 +68,8 @@ class OperationLog:
 
 
 def main():
-    pass
+    log = OperationLog()
+    log.resultPrint('1111')
 
 
 if __name__ == '__main__':

@@ -1,6 +1,9 @@
 import json
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
+from utils import LogOperation
+
+log = LogOperation.OperationLog()
 
 class OperationKafka:
     """
@@ -9,6 +12,7 @@ class OperationKafka:
     def __init__(self):
         pass
 
+    @log.classFuncDetail2Log('DEBUG')
     def createKafkaConsumer(self,target,topic):
         consumer = KafkaConsumer(topic,
                                  bootstrap_servers=target,
@@ -21,6 +25,7 @@ class OperationKafka:
                                  )
         return consumer
 
+    @log.classFuncDetail2Log('DEBUG')
     def createKafkaProducer(self,target):
         producer = KafkaProducer(bootstrap_servers=target,value_serializer=lambda v: json.dumps(v).encode('utf-8'))
         return producer

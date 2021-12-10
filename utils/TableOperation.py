@@ -282,7 +282,6 @@ class OperationTable:
         :return:
         """
 
-        @log.classFuncDetail2Log('DEBUG')
         def networkInfoDictPOST(data):
             sql = "insert into network_info_dict (UNIQUEID,PARENTNETWORK,NETWORK,NETMASK,STARTIP,ENDIP,BROAIP,NETIP,IPNUM,USED,FREE) \
             values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE \
@@ -292,7 +291,6 @@ class OperationTable:
             res = Operation.insert_all(sql, data)
             #print(res)
 
-        @log.classFuncDetail2Log('DEBUG')
         def networkInfoPOST(data):
             sql = "insert into network_info (UNIQUEID,NETWORK,IP,SYSNAME,MAC,PRODUCER,IPTYPE) \
             values (%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE \
@@ -302,7 +300,6 @@ class OperationTable:
             res = Operation.insert_all(sql, data)
             #print(res)
 
-        @log.classFuncDetail2Log('DEBUG')
         def dfs(dataDict: dict,parentNetwork:str):
             data.append([parentNetwork+dataDict['name'],parentNetwork,dataDict['name'], dataDict['netmask'], dataDict['startip'], dataDict['endip'], dataDict['broip'],
             dataDict['netip'], dataDict['total'], dataDict['used'], dataDict['free']])
@@ -312,7 +309,6 @@ class OperationTable:
             except:
                 return
 
-        @log.classFuncDetail2Log('DEBUG')
         def getDiffDataList(databaseInfoDict,data):
             updateList = []
             insertList = []
@@ -325,7 +321,6 @@ class OperationTable:
                     insertList.append(info)
             return updateList,insertList
 
-        @log.classFuncDetail2Log('DEBUG')
         def changeNetDeviceInfo2data(dataDict):
             for network,networkDiCT in dataDict.items():
                 for IP,IPInfo in networkDiCT['networkDevice'].items():
@@ -341,7 +336,6 @@ class OperationTable:
         data = []
         dfs(superNetworkInformationDict,'startPoint')
         databaseInfoDict = self.networkInfoDictGET()
-        print(databaseInfoDict)
         dictUpdateList,dictInsertList = getDiffDataList(databaseInfoDict,data)
         networkInfoDictPOST(data)
         data = []

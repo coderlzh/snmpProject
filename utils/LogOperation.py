@@ -1,7 +1,9 @@
 import os
 import re
 import traceback
+import functools
 from utils import ToolOperation
+
 
 class OperationLog:
     """
@@ -13,16 +15,37 @@ class OperationLog:
 
     def classFuncDetail2Log(self,prefix):
         def decorator(func):
+            @functools.wraps(func)
             def wrapper(*args, **kargs):
                 self.logPrint('['+ ToolOperation.getTime()  +'] ' + prefix + ' || FUNCTION {'+ func.__name__ + '} IN CLASS {' + args[0].__class__.__name__ +'} BE EXCUTED.' )
                 try:
                     res = func(*args, **kargs)
                     self.logPrint(
                         '[' + ToolOperation.getTime() + '] ' + prefix + ' || FUNCTION {' + func.__name__ + '} IN CLASS {' + args[0].__class__.__name__ + '} EXCUTE SUCCESSFULLY. ')
+                    self.logPrint(
+                        '[' + ToolOperation.getTime() + '] DEBUG || '+'RETURN THE RESULT: \n' + str(res))
                     return res
                 except:
                     self.logPrint(
-                        '[' + ToolOperation.getTime() + '] ' + 'WARN || FUNCTION {' + func.__name__ + '} IN CLASS {' + args[0].__class__.__name__ + '} EXCUTE FAILED UNEXPECTLY. RAISE THE ERROE : \n' + traceback.format_exc())
+                        '[' + ToolOperation.getTime() + '] ' + 'WARN || FUNCTION {' + func.__name__ + '} IN CLASS {' + args[0].__class__.__name__ + '} EXCUTE FAILED UNEXPECTEDLY. RAISE THE ERROE : \n' + traceback.format_exc())
+            return wrapper
+        return decorator
+
+    def Detail2Log(self,prefix):
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kargs):
+                self.logPrint('['+ ToolOperation.getTime()  +'] ' + prefix + ' || FUNCTION {'+ func.__name__ + '} BE EXCUTED.' )
+                try:
+                    res = func(*args, **kargs)
+                    self.logPrint(
+                        '[' + ToolOperation.getTime() + '] ' + prefix + ' || FUNCTION {' + func.__name__ + '} EXCUTE SUCCESSFULLY.')
+                    self.logPrint(
+                        '[' + ToolOperation.getTime() + '] DEBUG || ' + 'RETURN THE RESULT: \n' + str(res))
+                    return res
+                except:
+                    self.logPrint(
+                        '[' + ToolOperation.getTime() + '] ' + 'WARN || FUNCTION {' + func.__name__ + '} EXCUTE FAILED UNEXPECTEDLY. RAISE THE ERROE : \n' + traceback.format_exc())
             return wrapper
         return decorator
 

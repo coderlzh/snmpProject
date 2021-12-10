@@ -66,7 +66,6 @@ class OperationRouter:
                                             if ID[0].startswith("No Such"):
                                                 result = ID[0] + self.getRouterName()
                                                 return result
-            print(ID[0])
             return ID[0]
 
     @log.classFuncDetail2Log('DEBUG')
@@ -301,16 +300,19 @@ class OperationRouter:
     @log.classFuncDetail2Log('DEBUG')
     def getRouterAllInformation(self, whiteList=None):
         routerAllInformationDict = {}
-        if not self.routerInterfaceInformationDict:
-            self.routerInterfaceInformationDict = self.getRouterInterfaceInformationDict()
         if not self.routerSysInformationDict:
             self.routerSysInformationDict= self.getRouterSysInformationDict()
+        while not self.routerSysInformationDict['sysSNID']:
+            self.routerSysInformationDict['sysSNID'] = self.getRouterSNID()
+        if not self.routerInterfaceInformationDict:
+            self.routerInterfaceInformationDict = self.getRouterInterfaceInformationDict()
         if not self.routerRelativeInformationDict:
             self.routerRelativeInformationDict = self.getRouterRelativeInformationDict()
         if not self.routerRouteInformationDict:
             self.routerRouteInformationDict = self.getRouterRouterInformationDict()
         if not self.routerNeighborInformationDict:
             self.routerNeighborInformationDict = self.getRouterNeighborInformationDict(whiteList)
+
         routerAllInformationDict['equipmentSysInformation'] = self.routerSysInformationDict
         routerAllInformationDict['equipmentInterfaceInformation'] = self.routerInterfaceInformationDict
         routerAllInformationDict['equipmentRouterInformation'] = self.routerRouteInformationDict

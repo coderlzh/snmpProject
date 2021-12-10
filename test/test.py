@@ -824,18 +824,24 @@
 #     print(MessageDict)
 
 
-from utils import LogOperation
-log = LogOperation.OperationLog()
-class A(object):
-    def __init__(self):
-        self.name = 'A'
-        self.value = 1
+# from utils import LogOperation
+# log = LogOperation.OperationLog()
+# class A(object):
+#     def __init__(self):
+#         self.name = 'A'
+#         self.value = 1
+#
+#     @log.classFuncDetail2Log('DEBUG')
+#     def foo(self,x,param=2):
+#         print(x)
+#         print(self.name + 'foo')
+#         return 1
+#
+# a =A()
+# print(a.foo(1,param = 3))
 
-    @log.classFuncDetail2Log('DEBUG')
-    def foo(self,x,param=2):
-        print(x)
-        print(self.name + 'foo')
-        return 1
+def foo(x=1,y=2,z=3):
+    print(x,y,z)
 
-a =A()
-print(a.foo(1,param = 3))
+dictx = {}
+foo(**dictx)

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask,request
 import json
 from utils import ToolOperation
 
@@ -13,8 +13,16 @@ def DBNetworkInfoFlush():
     kf = KafkaOperation.OperationKafka()
     producer = kf.createKafkaProducer('10.46.97.234:9092')
     Time = ToolOperation.getTime()
-    producer.send('network', value={'timestamp': Time,'targetFunc':'networkFlush'})
+    producer.send('network', value={'timestamp': Time,'targetFunc':'networkInfoDetect/networkInfoDetect','param':{}})
     ren = {'code': 200, 'msg': '正在完整更新网络设备信息表，更新完毕将以短信形式通知'}
+    return json.dumps(ren, ensure_ascii=False)
+
+
+@api.route('/pathTrace', methods=['POST'])
+def pathTrace():
+    data = request.get_json()
+    print(data)
+    ren = {'code': 200, 'msg': '路径计算完成'}
     return json.dumps(ren, ensure_ascii=False)
 
 if __name__ == '__main__':

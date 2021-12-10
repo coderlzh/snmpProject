@@ -1,8 +1,8 @@
-from utils import LogOperation, RouterOperation,CMDBOperation
+from utils import LogOperation, RouterOperation,CMDBOperation,TableOperation,MessageOperation
 import argparse
 import json
 
-def excuteByInterface(community='1q3e!Q#E',target='10.46.79.126',port='161'):
+def networkInfoDetect(community='1q3e!Q#E',target='10.46.79.126',port='161'):
     log = LogOperation.OperationLog()
     rt = RouterOperation.OperationRouter(community, target, port)
     detection =rt.getRouterName()
@@ -12,15 +12,10 @@ def excuteByInterface(community='1q3e!Q#E',target='10.46.79.126',port='161'):
     for NeighborIP, NeighborName, NeighborSNID in neighborDiscovery:
         if (NeighborName):
             rt = RouterOperation.OperationRouter('1q3e!Q#E', NeighborIP, '161')
-            try:
-                dataJson, dataDict = rt.getRouterAllInformation(whiteList=[])
-                networkDict[NeighborName] = dataDict
-                # cm.AllInformationPOST(dataDict)
-                # tb.insertDictionary2Database(dataDict)
-            except Exception as e:
-                log.logPrint(str(e))
-                log.logPrint("Get DataDict Error! " + NeighborName + " SNMPWALK TIME OUT! PLEASE CHECK IT.")
-                continue
+            dataJson, dataDict = rt.getRouterAllInformation(whiteList=[])
+            networkDict[NeighborName] = dataDict
+            # cm.AllInformationPOST(dataDict)
+            # tb.insertDictionary2Database(dataDict)
             for router in dataDict['neighborDict']['reachable']:
                 if (router[2] in [i[2] for i in neighborDiscovery]):
                     continue
@@ -37,6 +32,14 @@ def excuteByInterface(community='1q3e!Q#E',target='10.46.79.126',port='161'):
     #log.logPrint(str(neighborDiscovery))
     log.resultPrint(str(neighborDiscovery))
     log.networkJsonPrint(json.dumps(networkDict, ensure_ascii=False, indent=4))
+    to = TableOperation.OperationTable()
+    dictUpdateList, dictInsertList, infoUpdateList, infoInsertList = to.insertTreeDict2Database()
+    ms = MessageOperation.OperationMessage()
+    ReceiverList = []
+    MessageSendFinal = ms.sendMessage2Kafka(ReceiverList)
+    MessageJson = ms.message2json(MessageSendFinal)
+    return MessageJson
+
 
 def main():
     parser = argparse.ArgumentParser(description='本脚本通过snmp协议实现网络拓扑的发现与各路由器及活终端的监控')

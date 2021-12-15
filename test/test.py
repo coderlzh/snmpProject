@@ -840,8 +840,12 @@
 # a =A()
 # print(a.foo(1,param = 3))
 
-def foo(x=1,y=2,z=3):
-    print(x,y,z)
+from utils import log_model
+log = log_model.OperationLog()
+@log.Detail2Log('DEBUG')
+def foo(x=100,y=2,z=3):
+    print(x)
+dictx = {'x':1}
 
-dictx = {}
+print(log.__dir__())
 foo(**dictx)

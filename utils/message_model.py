@@ -1,9 +1,9 @@
 
 import re
 import json
-from utils import LogOperation
+from utils import log_model
 
-log = LogOperation.OperationLog()
+log = log_model.OperationLog()
 class OperationMessage:
     """
     信息相关操作

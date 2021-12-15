@@ -1,9 +1,8 @@
 from pysnmp.hlapi import *
-from utils import LogOperation
 import time
-from utils import LogOperation
+from utils import log_model
 
-log = LogOperation.OperationLog()
+log = log_model.OperationLog()
 
 class OperationSnmp:
     """
@@ -28,7 +27,6 @@ class OperationSnmp:
 
         example: snmpwalk -v2c -c 1q3e!Q#E 10.46.97.252 1.3.6.1.2.1.4.21.1.7
         """
-        log = LogOperation.OperationLog()
         result = []
         mib = []
         for oid in oidList:

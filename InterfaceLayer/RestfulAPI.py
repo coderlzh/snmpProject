@@ -1,6 +1,6 @@
 from flask import Flask,request
 import json
-from utils import ToolOperation
+from utils import tool_model
 
 # 实例化api，把当前这个python文件当作一个服务，__name__代表当前这个python文件
 api = Flask(__name__)
@@ -12,7 +12,7 @@ def DBNetworkInfoFlush():
     from utils import KafkaOperation
     kf = KafkaOperation.OperationKafka()
     producer = kf.createKafkaProducer('10.46.97.234:9092')
-    Time = ToolOperation.getTime()
+    Time = tool_model.getTime()
     producer.send('network', value={'timestamp': Time,'targetFunc':'networkInfoDetect/networkInfoDetect','param':{}})
     ren = {'code': 200, 'msg': '正在完整更新网络设备信息表，更新完毕将以短信形式通知'}
     return json.dumps(ren, ensure_ascii=False)

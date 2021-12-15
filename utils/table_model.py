@@ -1,8 +1,8 @@
-from utils import MysqlOperation, NetworkOperation
+from utils import mysql_model, network_model
 import time
-from utils import LogOperation
+from utils import log_model
 
-log = LogOperation.OperationLog()
+log = log_model.OperationLog()
 
 class OperationTable:
     """
@@ -15,14 +15,14 @@ class OperationTable:
     @log.classFuncDetail2Log('DEBUG')
     def dropExsistTable(self, table):
         sql = 'drop table if exists %s' % (table)
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         res = Operation.drop_one(sql)
         if (res):
             return res
 
     @log.classFuncDetail2Log('DEBUG')
     def createTableEquipmentSysInformation(self):
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS equipmentSysInformation%s(\
         sysSnID VARCHAR(255) NOT NULL COMMENT '设备唯一标识符',\
         sysDescr VARCHAR(255) NOT NULL COMMENT '设备的描述 OID:1.3.6.1.2.1.1.1.0(get)',\
@@ -46,7 +46,7 @@ class OperationTable:
 
     @log.classFuncDetail2Log('DEBUG')
     def createTableEquipmentInterfaceInformation(self):
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS equipmentInterfaceInformation%s(\
         sysName VARCHAR(255) NOT NULL COMMENT '设备名称 OID:1.3.6.1.2.1.1.5.0(get)',\
         interfaceUniqueID VARCHAR(255) NOT NULL COMMENT '接口唯一标识符 由SN码和接口ID组成',\
@@ -71,7 +71,7 @@ class OperationTable:
 
     @log.classFuncDetail2Log('DEBUG')
     def createTableEquipmentRouterInformation(self):
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS equipmentRouterInformation%s(\
         sysName VARCHAR(255) NOT NULL COMMENT '设备名称 OID:1.3.6.1.2.1.1.5.0(get)',\
         routerUniqueID VARCHAR(255) NOT NULL COMMENT '路由唯一标识符 由SN码和路由目的组成',\
@@ -92,7 +92,7 @@ class OperationTable:
 
     @log.classFuncDetail2Log('DEBUG')
     def createTableEquipment2equipment(self):
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS equipment2equipment%s(\
         localSysName VARCHAR(255) NOT NULL COMMENT '本地设备名称 OID:1.3.6.1.2.1.1.5.0(get)',\
         relativeUniqueID VARCHAR(255) NOT NULL COMMENT '路由唯一标识符 由本地设备SN码和对端设备接口IP组成',\
@@ -114,7 +114,7 @@ class OperationTable:
 
     @log.classFuncDetail2Log('DEBUG')
     def createTableTerminalSnmpUnenabled(self):
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         sql = "CREATE TABLE IF NOT EXISTS terminalSnmpUnenabled(\
         id INT NOT NULL AUTO_INCREMENT COMMENT '本表的主键',\
         terminalIP  VARCHAR(100) NOT NULL COMMENT '未开启snmp协议的终端设备IP',\
@@ -160,7 +160,7 @@ class OperationTable:
                       "ON DUPLICATE KEY UPDATE sysSnID = VALUES(sysSnID),sysDescr=VALUES(sysDescr),sysObjectID=VALUES(sysObjectID), sysUpTime=VALUES(sysUpTime),sysContact=VALUES(sysContact),sysName=VALUES(sysName),sysLocation=VALUES(sysLocation),sysSevices=VALUES(sysSevices),sysIfNumber=VALUES(sysIfNumber),sysForwarding=VALUES(sysForwarding)"
                 data = []
                 data.append(tuple(Dict[tableName][i] for i in Dict[tableName]))
-                Operation = MysqlOperation.OperationMysql()
+                Operation = mysql_model.OperationMysql()
                 res = Operation.insert_all(sql, tuple(data))
                 if (res):
                     print(res)
@@ -182,7 +182,7 @@ class OperationTable:
                       "ON DUPLICATE KEY UPDATE sysName=VALUES(sysName),routerUniqueID = VALUES(routerUniqueID),routerDest=VALUES(routerDest),routerIfIndex=VALUES(routerIfIndex),routerIfIP=VALUES(routerIfIP) ,routerNextHop=VALUES(routerNextHop) , routerMask=VALUES(routerMask)"
                 data = tuple(tuple([sysName] +
                              list([Dict[tableName][m][i] for i in Dict[tableName][m]])) for m in Dict[tableName])
-                Operation = MysqlOperation.OperationMysql()
+                Operation = mysql_model.OperationMysql()
                 res = Operation.insert_all(sql, tuple(data))
                 if (res):
                     print(res)
@@ -206,7 +206,7 @@ class OperationTable:
                       "ON DUPLICATE KEY UPDATE localSysName=VALUES(localSysName),relativeUniqueID =VALUES(relativeUniqueID),localInterfaceID=VALUES(localInterfaceID), localInterfaceIP=VALUES(localInterfaceIP),peerInterfaceIP=VALUES(peerInterfaceIP), peerInterfacePhysAddress=VALUES(peerInterfacePhysAddress) ,peerSysName=VALUES(peerSysName),peerSysForwarding = VALUES(peerSysForwarding)"
                 data = tuple(tuple([sysName] +
                              list([Dict[tableName][m][i] for i in Dict[tableName][m]])) for m in Dict[tableName])
-                Operation = MysqlOperation.OperationMysql()
+                Operation = mysql_model.OperationMysql()
                 res = Operation.insert_all(sql, data)
                 if (res):
                     print(res)
@@ -234,7 +234,7 @@ class OperationTable:
                 data = tuple(tuple([sysName] +
                              list([Dict[tableName][m][i] for i in Dict[tableName][m]])) for m in Dict[tableName])
                 print(data)
-                Operation = MysqlOperation.OperationMysql()
+                Operation = mysql_model.OperationMysql()
                 res = Operation.insert_all(sql, data)
                 if (res):
                     print(res)
@@ -246,7 +246,7 @@ class OperationTable:
         sql = "insert into equipmentSysInformation%s(sysSnID,sysName) values ('%s','%s') ON DUPLICATE KEY UPDATE sysSnID = VALUES(sysSnID),sysName=VALUES(sysName) " % (
             time.strftime('%Y%m%d'), 'Unknown' + Sysname, Sysname)
         print(sql)
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         res = Operation.insert_one(sql)
         if (res):
             print(res)
@@ -254,14 +254,14 @@ class OperationTable:
     @log.classFuncDetail2Log('DEBUG')
     def selectFromDatabaseGroupByParam(self, table, param):
         sql = 'SELECT %s FROM %s group by %s;' % (param, table, param)
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         res = Operation.search_all(sql)
         return res
 
     @log.classFuncDetail2Log('DEBUG')
     def selectFromDatabase(self, table):
         sql = 'SELECT * FROM %s;' % (table)
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         res = Operation.search_all(sql)
         return res
         # print(res[0]['id'])
@@ -287,7 +287,7 @@ class OperationTable:
             values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE \
             UNIQUEID=VALUES(UNIQUEID),PARENTNETWORK=VALUES(PARENTNETWORK),NETWORK=VALUES(NETWORK),NETMASK=VALUES(NETMASK),STARTIP=VALUES(STARTIP),ENDIP=VALUES(ENDIP),BROAIP=VALUES(BROAIP),NETIP=VALUES(NETIP),IPNUM=VALUES(IPNUM),USED=VALUES(USED),FREE=VALUES(FREE) "
             #print(sql)
-            Operation = MysqlOperation.OperationMysql()
+            Operation = mysql_model.OperationMysql()
             res = Operation.insert_all(sql, data)
             #print(res)
 
@@ -296,7 +296,7 @@ class OperationTable:
             values (%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE \
             UNIQUEID=VALUES(UNIQUEID),NETWORK=VALUES(NETWORK),IP=VALUES(IP),SYSNAME=VALUES(SYSNAME),MAC=VALUES(MAC),PRODUCER=VALUES(PRODUCER),IPTYPE=VALUES(IPTYPE)"
             #print(sql)
-            Operation = MysqlOperation.OperationMysql()
+            Operation = mysql_model.OperationMysql()
             res = Operation.insert_all(sql, data)
             #print(res)
 
@@ -331,7 +331,7 @@ class OperationTable:
                     for i in IPInfo.split('&'):
                         iList = i.split('/ ')
                         data.append([network+IP+iList[0],network,IP,'']+iList+['0'])
-        net = NetworkOperation.OperationNetwork('../logs/networkInformation.txt')
+        net = network_model.OperationNetwork('../logs/networkInformation.txt')
         netDeviceInformationDict,superNetworkInformationDict = net.getNetDeviceInformationTreeDict()
         data = []
         dfs(superNetworkInformationDict,'startPoint')
@@ -349,7 +349,7 @@ class OperationTable:
     def networkDeviceDictGET(self):
         sql = "select * from network_info"
         #print(sql)
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         resList = Operation.search_all(sql)
         resDict = {}
         for res in resList:
@@ -363,7 +363,7 @@ class OperationTable:
     def networkInfoDictGET(self):
         sql = "select * from network_info_dict"
         #print(sql)
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         resList = Operation.search_all(sql)
         resDict = {}
         for res in resList:
@@ -376,7 +376,7 @@ class OperationTable:
     @log.classFuncDetail2Log('DEBUG')
     def monitoringItemTypeGET(self):
         sql = 'SELECT itemid FROM history GROUP BY itemid;'
-        Operation = MysqlOperation.OperationMysql()
+        Operation = mysql_model.OperationMysql()
         res = Operation.search_all(sql)
         return res
 

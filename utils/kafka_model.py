@@ -1,19 +1,21 @@
 import json
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
-from utils import LogOperation
+from utils import log_model
 
-log = LogOperation.OperationLog()
+log = log_model.OperationLog()
+
 
 class OperationKafka:
     """
     Kafka相关操作
     """
+
     def __init__(self):
         pass
 
     @log.classFuncDetail2Log('DEBUG')
-    def createKafkaConsumer(self,target,topic):
+    def createKafkaConsumer(self, target, topic):
         consumer = KafkaConsumer(topic,
                                  bootstrap_servers=target,
                                  auto_offset_reset='latest',  # 消费kafka中最近的数据，如果设置为earliest则消费最早的数据，不管这些数据是否消费
@@ -26,12 +28,14 @@ class OperationKafka:
         return consumer
 
     @log.classFuncDetail2Log('DEBUG')
-    def createKafkaProducer(self,target):
-        producer = KafkaProducer(bootstrap_servers=target,value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+    def createKafkaProducer(self, target):
+        producer = KafkaProducer(bootstrap_servers=target, value_serializer=lambda v: json.dumps(v).encode('utf-8'))
         return producer
+
 
 def main():
     pass
+
 
 if __name__ == '__main__':
     main()

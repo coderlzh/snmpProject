@@ -1,12 +1,12 @@
 import json
 
-from utils import KafkaOperation, MessageOperation, LogOperation, TableOperation
+from utils import kafka_model, message_model, log_model, table_model
 
 
-kf = KafkaOperation.OperationKafka()
+kf = kafka_model.OperationKafka()
 consumer = kf.createKafkaConsumer('10.46.97.234:9092', topic='network')
 
-log = LogOperation.OperationLog()
+log = log_model.OperationLog()
 
 @log.Detail2Log('DEBUG')
 def manhattanTransfer(MessageDict):

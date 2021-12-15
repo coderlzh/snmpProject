@@ -1,8 +1,8 @@
 # connect_db：连接数据库，并操作数据库
 import pymysql
-from utils import LogOperation
+from utils import log_model
 
-log = LogOperation.OperationLog()
+log = log_model.OperationLog()
 class OperationMysql:
 
     def __init__(self):

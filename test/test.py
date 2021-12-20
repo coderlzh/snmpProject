@@ -840,12 +840,39 @@
 # a =A()
 # print(a.foo(1,param = 3))
 
-from utils import log_model
-log = log_model.OperationLog()
-@log.Detail2Log('DEBUG')
-def foo(x=100,y=2,z=3):
-    print(x)
-dictx = {'x':1}
+# from utils import log_model
+# log = log_model.OperationLog()
+# @log.Detail2Log('DEBUG')
+# def foo(x=100,y=2,z=3):
+#     print(x)
+# dictx = {'x':1}
+#
+# print(log.__dir__())
+# foo(**dictx)
 
-print(log.__dir__())
-foo(**dictx)
+class Table:
+    def __init__(self,name):
+        self.name = name
+
+    @Table.classFuncDetail2Log('INFO')
+    @classmethod
+    def func_be_mentioned(cls,name):
+        print('111111')
+        t = cls(name)
+        return t
+
+    @staticmethod
+    def classFuncDetail2Log(prefix):
+        def decorator(func):
+            def wrapper(*args, **kargs):
+                print('2222222222')
+                res = func(*args, **kargs)
+                return res
+            return wrapper
+        return decorator
+
+    def func2(self):
+        print(self.name)
+
+t = Table.func_be_mentioned(3)
+t.func2()

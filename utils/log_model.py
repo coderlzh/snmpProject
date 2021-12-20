@@ -35,10 +35,7 @@ class OperationLog:
         def decorator(func):
             @functools.wraps(func)
             def wrapper(*args, **kargs):
-                if hasattr(self, prefix.lower()):
-                    logFunc = getattr(self, prefix.lower())
-                else:
-                    raise
+                logFunc = getattr(self, prefix.lower())
                 logFunc(' FUNCTION {'+ func.__name__ + '} IN CLASS {' + args[0].__class__.__name__ +'} BE EXCUTED.')
                 try:
                     res = func(*args, **kargs)

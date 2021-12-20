@@ -32,7 +32,8 @@ class OperationSnmp:
         for oid in oidList:
             mib.append(ObjectType(ObjectIdentity(oid)))
             result.append([])
-        g = nextCmd(SnmpEngine(),
+        snmpEngine = SnmpEngine()
+        g = nextCmd(snmpEngine,
                     CommunityData(self.community, mpModel=1),
                     UdpTransportTarget((self.target, self.port)),
                     ContextData(),
@@ -40,9 +41,9 @@ class OperationSnmp:
                     lexicographicMode=False)
         for (errorIndication, errorStatus, errorIndex, varBinds) in g:
             if errorIndication:
-                print(errorIndication)
+                log.error(errorIndication)
             elif errorStatus:
-                print('%s at %s' % (errorStatus.prettyPrint(),
+                log.error('%s at %s' % (errorStatus.prettyPrint(),
                                     errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
             else:
                 for i in range(len(varBinds)):
@@ -69,9 +70,9 @@ class OperationSnmp:
                     *mib)
         errorIndication, errorStatus, errorIndex, varBinds = next(g)
         if errorIndication:
-            print(errorIndication)
+            log.error(str(errorIndication))
         elif errorStatus:
-            print('%s at %s' % (errorStatus.prettyPrint(),
+            log.error('%s at %s' % (errorStatus.prettyPrint(),
                             errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
         else:
             for varBind in varBinds:

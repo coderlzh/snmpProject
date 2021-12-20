@@ -7,7 +7,11 @@ from utils import log_model, snmp_model
 
 log = log_model.OperationLog()
 
-class OperationEquipment(ABC):
+
+class Equipment(ABC):
+    """
+    设备信息
+    """
     def __init__(self, community, target, port):
         self.community = community
         self.target = target
@@ -56,7 +60,7 @@ class OperationEquipment(ABC):
         pass
 
 
-class OperationRouter(OperationEquipment):
+class Router(Equipment):
     """
     单台路由器相关操作
     """
@@ -77,12 +81,12 @@ class OperationRouter(OperationEquipment):
 
     @log.classFuncDetail2Log('DEBUG')
     def getName(self):
-            sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
-            name = sn.getbulk(['1.3.6.1.2.1.1.5.0'])
-            if (bool(name)):
-                return name[0]
-            else:
-                return None
+        sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
+        name = sn.getbulk(['1.3.6.1.2.1.1.5.0'])
+        if (bool(name)):
+            return name[0]
+        else:
+            return None
 
     @log.classFuncDetail2Log('DEBUG')
     def getSNID(self):
@@ -109,27 +113,28 @@ class OperationRouter(OperationEquipment):
                                         ID = sn.getbulk(['1.3.6.1.2.1.47.1.1.1.1.11.1207967776'])
                                         if ID[0].startswith("No Such"):
                                             result = ID[0] + self.getName()
+                                            self.SNID = result
                                             return result
+        self.SNID = ID[0]
         return ID[0]
 
     @log.classFuncDetail2Log('DEBUG')
     def __getRouterForwarding(self):
-            sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
-            name = sn.getbulk(['1.3.6.1.2.1.4.1.0'])
-            if (bool(name)):
-                return name[0]
-            else:
-                return None
+        sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
+        name = sn.getbulk(['1.3.6.1.2.1.4.1.0'])
+        if (bool(name)):
+            return name[0]
+        else:
+            return None
 
     @log.classFuncDetail2Log('DEBUG')
     def getRouterNexthopsListAndType(self):
-            sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
-            [NexthopsList, NexthopsType] = sn.walk(['1.3.6.1.2.1.4.21.1.7', '1.3.6.1.2.1.4.21.1.8'])
-            # print(list(zip(NexthopsList, NexthopsType)))
-            return [NexthopsList, NexthopsType]
+        sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
+        [NexthopsList, NexthopsType] = sn.walk(['1.3.6.1.2.1.4.21.1.7', '1.3.6.1.2.1.4.21.1.8'])
+        # print(list(zip(NexthopsList, NexthopsType)))
+        return [NexthopsList, NexthopsType]
 
     @log.classFuncDetail2Log('DEBUG')
-
     @log.classFuncDetail2Log('DEBUG')
     def getInterfaceInformationDict(self):
         # print('function getInterfaceInformationDict')
@@ -146,9 +151,12 @@ class OperationRouter(OperationEquipment):
             temp = {}
             temp['interfaceUniqueID'], temp['interfaceID'], temp['interfaceName'], temp['interfacePhysAddress'], \
             temp['interfaceAdminStatus'], temp['interfaceOperStatus'], temp['interfaceLastChange'], temp[
-                'interfaceDesc'] =  result['sysSnID'] + 'InterfaceID' + result['interfaceID'][i],result['interfaceID'][i],\
-                                    result['interfaceName'][i],result['interfacePhysAddress'][i],result['interfaceAdminStatus'][i],\
-                                    result['interfaceOperStatus'][i],result['interfaceLastChange'][i],result['interfaceDesc'][i]
+                'interfaceDesc'] = result['sysSnID'] + 'InterfaceID' + result['interfaceID'][i], result['interfaceID'][
+                i], \
+                                   result['interfaceName'][i], result['interfacePhysAddress'][i], \
+                                   result['interfaceAdminStatus'][i], \
+                                   result['interfaceOperStatus'][i], result['interfaceLastChange'][i], \
+                                   result['interfaceDesc'][i]
             temp['interfaceIP'] = ''
             temp['interfaceNetmask'] = ''
             interface[result['interfaceID'][i]] = temp
@@ -192,124 +200,130 @@ class OperationRouter(OperationEquipment):
                     maxNet = IPy.IP(routerDict['routerMask'])
                     resultIfIndex = routerDict['routerIfIndex']
                     resultIfIp = routerDict['routerIfIP']
-        return resultIfIndex,resultIfIp
+        return resultIfIndex, resultIfIp
 
     @log.classFuncDetail2Log('DEBUG')
     def getRouterInformationDict(self):
-        #print('function getRouterInformationDict')
-            if not self.interfaceInformationDict:
-                self.interfaceInformationDict = self.getInterfaceInformationDict()
-            result = {}
-            router = {}
-            sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
-            result['sysSnID'] = self.getSNID()
-            result['routerDest'], result['routerIfIndex'], result['routerNextHop'], \
-            result['routerMask'] = sn.walk(
-                ['1.3.6.1.2.1.4.21.1.1', '1.3.6.1.2.1.4.21.1.2', '1.3.6.1.2.1.4.21.1.7',
-                 '1.3.6.1.2.1.4.21.1.11'])
-            for i in range(len(result['routerDest'])):
-                temp = {}
-                temp['routerUniqueID'], temp['routerDest'], temp['routerIfIndex'], temp['routerIfIP'], temp[
-                    'routerNextHop'], \
-                temp['routerMask'] = result['sysSnID'] + 'Router' + result['routerDest'][i], result['routerDest'][i], \
-                                     result['routerIfIndex'][i], \
-                                     self.interfaceInformationDict[result['routerIfIndex'][i]]['interfaceIP'], \
-                                     result['routerNextHop'][i], \
-                                     result['routerMask'][i]
-                router[str(i)] = temp
-            for key,routerDict in router.items():
-                if(routerDict['routerIfIndex'] == '0'):
-                    routerDict['routerIfIndex'],routerDict['routerIfIP'] = self.__getWhichInterfaceDestinationIPOut(routerDict['routerNextHop'],router)
-            return router
+        # print('function getRouterInformationDict')
+        if not self.interfaceInformationDict:
+            self.interfaceInformationDict = self.getInterfaceInformationDict()
+        result = {}
+        router = {}
+        sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
+        result['sysSnID'] = self.getSNID()
+        result['routerDest'], result['routerIfIndex'], result['routerNextHop'], \
+        result['routerMask'] = sn.walk(
+            ['1.3.6.1.2.1.4.21.1.1', '1.3.6.1.2.1.4.21.1.2', '1.3.6.1.2.1.4.21.1.7',
+             '1.3.6.1.2.1.4.21.1.11'])
+        for i in range(len(result['routerDest'])):
+            temp = {}
+            temp['routerUniqueID'], temp['routerDest'], temp['routerIfIndex'], temp['routerIfIP'], temp[
+                'routerNextHop'], \
+            temp['routerMask'] = result['sysSnID'] + 'Router' + result['routerDest'][i], result['routerDest'][i], \
+                                 result['routerIfIndex'][i], \
+                                 self.interfaceInformationDict[result['routerIfIndex'][i]]['interfaceIP'], \
+                                 result['routerNextHop'][i], \
+                                 result['routerMask'][i]
+            router[str(i)] = temp
+        for key, routerDict in router.items():
+            if (routerDict['routerIfIndex'] == '0'):
+                routerDict['routerIfIndex'], routerDict['routerIfIP'] = self.__getWhichInterfaceDestinationIPOut(
+                    routerDict['routerNextHop'], router)
+        return router
 
     @log.classFuncDetail2Log('DEBUG')
     def getRelativeInformationDict(self, terminalSnmpUnenabledList=None):
-            if not self.interfaceInformationDict:
-                self.interfaceInformationDict = self.getInterfaceInformationDict()
-            result = {}
-            relative = {}
-            sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
-            result['sysSnID'] = self.getSNID()
-            result['localInterfaceID'], result['peerInterfaceIP'], \
-            result['peerInterfacePhysAddress'] = sn.walk(
-                ['1.3.6.1.2.1.4.22.1.1', '1.3.6.1.2.1.4.22.1.3',
-                 '1.3.6.1.2.1.4.22.1.2'])
-            for i in range(len(result['localInterfaceID'])):
-                temp = {}
-                temp['relativeUniqueID'], temp['localInterfaceID'], temp['localInterfaceIP'], temp['peerInterfaceIP'], \
-                temp[
-                    'peerInterfacePhysAddress'] \
-                    = result['sysSnID'] + 'RelativeIP' + result['peerInterfaceIP'][i], result['localInterfaceID'][i], \
-                      self.interfaceInformationDict[result['localInterfaceID'][i]]['interfaceIP'], \
-                      result['peerInterfaceIP'][i], \
-                      result['peerInterfacePhysAddress'][i]
-                temp['peerSysName'] = ''
-                temp['peerSysForwarding'] = ''
-                relative[temp['peerInterfaceIP']] = temp
-            return  relative
-            # for terminalSnmpUnenabled in terminalSnmpUnenabledList:
-            #     relative[terminalSnmpUnenabled]['peerSysName'] = 'unknown'
-            #     relative[terminalSnmpUnenabled]['peerSysForwarding'] = 'unknown'
-            # for i in relative:
-            #     if(relative[i]['peerSysName']):
-            #         continue
-            #     else:
-            #         rt = OperationRouter('1q3e!Q#E',relative[i]['peerInterfaceIP'], '161')
-            #         relative[i]['peerSysName'] = rt.getName()
-            #         if(relative[i]['peerSysName']):
-            #             relative[i]['peerSysForwarding'] = rt.__getRouterForwarding()
-            #         else:
-            #             continue
-            # return [interfacedict, relative]
+        if not self.interfaceInformationDict:
+            self.interfaceInformationDict = self.getInterfaceInformationDict()
+        result = {}
+        relative = {}
+        sn = snmp_model.OperationSnmp(self.community, self.target, self.port)
+        result['sysSnID'] = self.getSNID()
+        result['localInterfaceID'], result['peerInterfaceIP'], \
+        result['peerInterfacePhysAddress'] = sn.walk(
+            ['1.3.6.1.2.1.4.22.1.1', '1.3.6.1.2.1.4.22.1.3',
+             '1.3.6.1.2.1.4.22.1.2'])
+        for i in range(len(result['localInterfaceID'])):
+            temp = {}
+            temp['relativeUniqueID'], temp['localInterfaceID'], temp['localInterfaceIP'], temp['peerInterfaceIP'], \
+            temp[
+                'peerInterfacePhysAddress'] \
+                = result['sysSnID'] + 'RelativeIP' + result['peerInterfaceIP'][i], result['localInterfaceID'][i], \
+                  self.interfaceInformationDict[result['localInterfaceID'][i]]['interfaceIP'], \
+                  result['peerInterfaceIP'][i], \
+                  result['peerInterfacePhysAddress'][i]
+            temp['peerSysName'] = ''
+            temp['peerSysForwarding'] = ''
+            relative[temp['peerInterfaceIP']] = temp
+        return relative
+        # for terminalSnmpUnenabled in terminalSnmpUnenabledList:
+        #     relative[terminalSnmpUnenabled]['peerSysName'] = 'unknown'
+        #     relative[terminalSnmpUnenabled]['peerSysForwarding'] = 'unknown'
+        # for i in relative:
+        #     if(relative[i]['peerSysName']):
+        #         continue
+        #     else:
+        #         rt = OperationRouter('1q3e!Q#E',relative[i]['peerInterfaceIP'], '161')
+        #         relative[i]['peerSysName'] = rt.getName()
+        #         if(relative[i]['peerSysName']):
+        #             relative[i]['peerSysForwarding'] = rt.__getRouterForwarding()
+        #         else:
+        #             continue
+        # return [interfacedict, relative]
 
     @log.classFuncDetail2Log('DEBUG')
     def getRouterNeighborInformationDict(self, whiteList=None):
-        #print('function getRouterNeighborInformationDict')
-            if not self.routeInformationDict:
-                self.routeInformationDict = self.getRouterInformationDict()
-            if not self.sysInformationDict:
-                self.sysInformationDict = self.getSysInformationDict()
-            if not self.relativeInformationDict:
-                self.relativeInformationDict = self.getRelativeInformationDict()
-            resultIP = {}
-            resultIP['unreachable'] = []
-            resultIP['reachable'] = []
-            routerSelf = []
-            for i in range(len(self.routeInformationDict)):
-                if (self.routeInformationDict[str(i)]['routerNextHop'] == '0.0.0.0' or self.routeInformationDict[str(i)][
-                    'routerNextHop'] == '127.0.0.1' or self.routeInformationDict[str(i)]['routerNextHop'] in resultIP or
-                        self.routeInformationDict[str(i)]['routerNextHop'] in [i[0] for i in resultIP['reachable']] or
-                        self.routeInformationDict[str(i)][
-                            'routerNextHop'] in [i[0] for i in resultIP['unreachable']] or self.routeInformationDict[str(i)][
-                            'routerNextHop'] in whiteList or self.routeInformationDict[str(i)]['routerNextHop'] in routerSelf):
+        # print('function getRouterNeighborInformationDict')
+        if not self.routeInformationDict:
+            self.routeInformationDict = self.getRouterInformationDict()
+        if not self.sysInformationDict:
+            self.sysInformationDict = self.getSysInformationDict()
+        if not self.relativeInformationDict:
+            self.relativeInformationDict = self.getRelativeInformationDict()
+        resultIP = {}
+        resultIP['unreachable'] = []
+        resultIP['reachable'] = []
+        routerSelf = []
+        for i in range(len(self.routeInformationDict)):
+            if (self.routeInformationDict[str(i)]['routerNextHop'] == '0.0.0.0' or self.routeInformationDict[str(i)][
+                'routerNextHop'] == '127.0.0.1' or self.routeInformationDict[str(i)]['routerNextHop'] in resultIP or
+                    self.routeInformationDict[str(i)]['routerNextHop'] in [i[0] for i in resultIP['reachable']] or
+                    self.routeInformationDict[str(i)][
+                        'routerNextHop'] in [i[0] for i in resultIP['unreachable']] or
+                    self.routeInformationDict[str(i)][
+                        'routerNextHop'] in whiteList or self.routeInformationDict[str(i)][
+                        'routerNextHop'] in routerSelf):
+                continue
+            else:
+                rt = Router('1q3e!Q#E', self.routeInformationDict[str(i)]['routerNextHop'], '161')
+                nexthopName = rt.getName()
+                if not nexthopName:
+                    resultIP['unreachable'].append([self.routeInformationDict[str(i)]['routerNextHop'], None, None])
+                    continue
+                nexthopID = rt.getSNID()
+                if (nexthopName == self.sysInformationDict['sysName']):
+                    routerSelf.append(self.routeInformationDict[str(i)]['routerNextHop'])
                     continue
                 else:
-                    rt = OperationRouter('1q3e!Q#E', self.routeInformationDict[str(i)]['routerNextHop'], '161')
-                    nexthopName = rt.getName()
-                    if not nexthopName:
-                        resultIP['unreachable'].append([self.routeInformationDict[str(i)]['routerNextHop'], None, None])
-                        continue
-                    nexthopID = rt.getSNID()
-                    if (nexthopName == self.sysInformationDict['sysName']):
-                        routerSelf.append(self.routeInformationDict[str(i)]['routerNextHop'])
-                        continue
+                    if (nexthopName and nexthopID):
+                        resultIP['reachable'].append(
+                            [self.routeInformationDict[str(i)]['routerNextHop'], nexthopName, nexthopID])
+                    elif (nexthopName):
+                        resultIP['reachable'].append(
+                            [self.routeInformationDict[str(i)]['routerNextHop'], nexthopName, None])
                     else:
-                        if (nexthopName and nexthopID):
-                            resultIP['reachable'].append([self.routeInformationDict[str(i)]['routerNextHop'], nexthopName, nexthopID])
-                        elif (nexthopName):
-                            resultIP['reachable'].append([self.routeInformationDict[str(i)]['routerNextHop'], nexthopName, None])
-                        else:
-                            resultIP['unreachable'].append([self.routeInformationDict[str(i)]['routerNextHop'], None, None])
-            return resultIP
-        #     resultIP = {}
-        #     resultIP['unreachable'] = []
-        #     resultIP['reachable'] = []
-        #     return resultIP
+                        resultIP['unreachable'].append([self.routeInformationDict[str(i)]['routerNextHop'], None, None])
+        return resultIP
+
+    #     resultIP = {}
+    #     resultIP['unreachable'] = []
+    #     resultIP['reachable'] = []
+    #     return resultIP
     @log.classFuncDetail2Log('DEBUG')
     def getAllInformation(self, whiteList=None):
         routerAllInformationDict = {}
         if not self.sysInformationDict:
-            self.sysInformationDict= self.getSysInformationDict()
+            self.sysInformationDict = self.getSysInformationDict()
         while not self.sysInformationDict['sysSNID']:
             self.sysInformationDict['sysSNID'] = self.getSNID()
         if not self.interfaceInformationDict:
@@ -327,9 +341,8 @@ class OperationRouter(OperationEquipment):
         routerAllInformationDict['equipment2equipment'] = self.relativeInformationDict
         routerAllInformationDict['neighborDict'] = self.neighborInformationDict
         routerAllInformationJson = json.dumps(routerAllInformationDict, ensure_ascii=False, indent=4)
-        #print(routerAllInformationJson)
+        # print(routerAllInformationJson)
         return [routerAllInformationJson, routerAllInformationDict]
-
 
 
 def main():
@@ -337,7 +350,7 @@ def main():
     # rts = OperationRouters('1q3e!Q#E','10.46.97.252','161')
     # list1,list2 = rts.__getRouterInterfaceListAndIp()
     # print(list(zip(list1,list2)))
-    rt = OperationRouter('1q3e!Q#E', '10.46.79.126', '161')
+    rt = Router('1q3e!Q#E', '10.46.79.126', '161')
     log = log_model.OperationLog()
     dataJson, dataDict = rt.getAllInformation()
     print(dataJson)

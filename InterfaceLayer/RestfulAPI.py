@@ -9,8 +9,8 @@ api = Flask(__name__)
 @api.route('/DBNetworkInfoFlush', methods=['get'])
 # get方式访问
 def DBNetworkInfoFlush():
-    from utils import KafkaOperation
-    kf = KafkaOperation.OperationKafka()
+    from utils import kafka_model
+    kf = kafka_model.OperationKafka()
     producer = kf.createKafkaProducer('10.46.97.234:9092')
     Time = tool_model.getTime()
     producer.send('network', value={'timestamp': Time,'targetFunc':'networkInfoDetect/networkInfoDetect','param':{}})

@@ -849,30 +849,86 @@
 #
 # print(log.__dir__())
 # foo(**dictx)
+#
+# class Table:
+#     def __init__(self,name):
+#         self.name = name
+#
+#     @Table.classFuncDetail2Log('INFO')
+#     @classmethod
+#     def func_be_mentioned(cls,name):
+#         print('111111')
+#         t = cls(name)
+#         return t
+#
+#     @staticmethod
+#     def classFuncDetail2Log(prefix):
+#         def decorator(func):
+#             def wrapper(*args, **kargs):
+#                 print('2222222222')
+#                 res = func(*args, **kargs)
+#                 return res
+#             return wrapper
+#         return decorator
+#
+#     def func2(self):
+#         print(self.name)
+#
+# t = Table.func_be_mentioned(3)
+# t.func2()
+#
+# from threading import Thread
+# import threading
+# import time
+#
+#
+#
+# class MyThread(Thread):
+#     def __init__(self,target,args):
+#         super().__init__()
+#         self.target = target
+#         self.args = args
+#
+#     def run(self):
+#         self.result = self.target(*self.args)
+#
+#     def get_result(self):
+#         try:
+#             return self.result
+#         except Exception:
+#             return None
+#
+# def funcTest(a,b):
+#     print('111111111')
+#     time.sleep(10)
+#     return a+b
+#
+#
+# def createThreads(numList):
+#     threads = []
+#     for a,b in numList:
+#         t = MyThread(target=funcTest, args=(a,b))
+#         threads.append(t)
+#     return threads
+#
+# def main():
+#     numList = [[1, 2], [2, 3], [3, 4]]
+#     threads = createThreads(numList)
+#     for t in threads:
+#         t.start()
+#         print(threading.enumerate().__str__())
+#     for t in threads:
+#         t.join()
+#
+# main()
 
-class Table:
-    def __init__(self,name):
-        self.name = name
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+print(BASE_DIR)
+# 通过设置默认的包/模块的搜寻路径,添加路径apps所在的路径 需要导入 import sys
+import sys
+print(sys.path)
+sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
-    @Table.classFuncDetail2Log('INFO')
-    @classmethod
-    def func_be_mentioned(cls,name):
-        print('111111')
-        t = cls(name)
-        return t
 
-    @staticmethod
-    def classFuncDetail2Log(prefix):
-        def decorator(func):
-            def wrapper(*args, **kargs):
-                print('2222222222')
-                res = func(*args, **kargs)
-                return res
-            return wrapper
-        return decorator
-
-    def func2(self):
-        print(self.name)
-
-t = Table.func_be_mentioned(3)
-t.func2()

@@ -41,7 +41,7 @@ class OperationSnmp:
                     lexicographicMode=False)
         for (errorIndication, errorStatus, errorIndex, varBinds) in g:
             if errorIndication:
-                log.error(errorIndication)
+                log.error(str(errorIndication))
             elif errorStatus:
                 log.error('%s at %s' % (errorStatus.prettyPrint(),
                                     errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))

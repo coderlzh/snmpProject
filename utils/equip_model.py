@@ -1,9 +1,9 @@
 import json
 from abc import ABC, abstractmethod
-
 import IPy
+from utils import log_model, snmp_model, thread_model
 
-from utils import log_model, snmp_model
+
 
 log = log_model.OperationLog()
 
@@ -60,6 +60,7 @@ class Equipment(ABC):
         pass
 
 
+
 class Router(Equipment):
     """
     单台路由器相关操作
@@ -67,6 +68,8 @@ class Router(Equipment):
 
     def __init__(self, community, target, port):
         super().__init__(community, target, port)
+
+
 
     @log.classFuncDetail2Log('DEBUG')
     def __getRouterInterfaceListAndIp(self):
@@ -283,36 +286,47 @@ class Router(Equipment):
         resultIP = {}
         resultIP['unreachable'] = []
         resultIP['reachable'] = []
-        routerSelf = []
+        threads = []
+        def functest(community, target, port):
+            #这个函数出了点问题 他不能实现真正的多线程
+            rt = Router(community, target, port)
+            nexthopID = None
+            nexthopName = rt.getName()
+            if nexthopName:
+                nexthopID = rt.getSNID()
+            return nexthopName,nexthopID,target
+        tempList = []
         for i in range(len(self.routeInformationDict)):
             if (self.routeInformationDict[str(i)]['routerNextHop'] == '0.0.0.0' or self.routeInformationDict[str(i)][
-                'routerNextHop'] == '127.0.0.1' or self.routeInformationDict[str(i)]['routerNextHop'] in resultIP or
-                    self.routeInformationDict[str(i)]['routerNextHop'] in [i[0] for i in resultIP['reachable']] or
-                    self.routeInformationDict[str(i)][
-                        'routerNextHop'] in [i[0] for i in resultIP['unreachable']] or
-                    self.routeInformationDict[str(i)][
-                        'routerNextHop'] in whiteList or self.routeInformationDict[str(i)][
-                        'routerNextHop'] in routerSelf):
+                'routerNextHop'] == '127.0.0.1' or self.routeInformationDict[str(i)]['routerNextHop'] in tempList):
                 continue
             else:
-                rt = Router('1q3e!Q#E', self.routeInformationDict[str(i)]['routerNextHop'], '161')
-                nexthopName = rt.getName()
-                if not nexthopName:
-                    resultIP['unreachable'].append([self.routeInformationDict[str(i)]['routerNextHop'], None, None])
-                    continue
-                nexthopID = rt.getSNID()
-                if (nexthopName == self.sysInformationDict['sysName']):
-                    routerSelf.append(self.routeInformationDict[str(i)]['routerNextHop'])
-                    continue
+                #log.info(str(self.routeInformationDict[str(i)]['routerNextHop']))
+                tempList.append(self.routeInformationDict[str(i)]['routerNextHop'])
+                t = thread_model.MyThread(target=functest, args=(self.community,self.routeInformationDict[str(i)]['routerNextHop'],self.port))
+                threads.append(t)
+        for t in threads:
+            log.info(t.args[1])
+            t.start()
+        for t in threads:
+            t.join()
+        for t in threads:
+            nexthopName, nexthopID ,nexthopIP = t.get_result()
+            if (nexthopIP in [i[0] for i in resultIP['reachable']] or nexthopIP in [i[0] for i in resultIP['unreachable']] or nexthopIP in whiteList):
+                continue
+            if not nexthopName:
+                resultIP['unreachable'].append([nexthopIP, None, None])
+                continue
+            else:
+                if (nexthopName and nexthopID):
+                    resultIP['reachable'].append(
+                        [nexthopIP, nexthopName, nexthopID])
+                elif (nexthopName):
+                    resultIP['reachable'].append(
+                        [nexthopIP, nexthopName, None])
                 else:
-                    if (nexthopName and nexthopID):
-                        resultIP['reachable'].append(
-                            [self.routeInformationDict[str(i)]['routerNextHop'], nexthopName, nexthopID])
-                    elif (nexthopName):
-                        resultIP['reachable'].append(
-                            [self.routeInformationDict[str(i)]['routerNextHop'], nexthopName, None])
-                    else:
-                        resultIP['unreachable'].append([self.routeInformationDict[str(i)]['routerNextHop'], None, None])
+                    resultIP['unreachable'].append(
+                        [nexthopIP, None, None])
         return resultIP
 
     #     resultIP = {}

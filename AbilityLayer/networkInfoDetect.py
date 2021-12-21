@@ -1,40 +1,35 @@
-from utils import log_model, equip_model,cmdb_model,table_model,message_model
+from utils import log_model, equip_model,cmdb_model,table_model,message_model,thread_model
 import argparse
 import json
-from threading import Thread
 import collections
+from configparser import ConfigParser
 
+CONFIGFILE = '../config/project.ini'
+config = ConfigParser()
+config.read(CONFIGFILE)
+COMMUNITY = config['detection'].get('Community')
+TARGET = config['detection'].get('Target')
+PORT = config['detection'].get('Port')
 
-class MyThread(Thread):
-    def __init__(self,target,args):
-        super().__init__()
-        self.args = args
-        self.result = target(*args)
-        self.get_args()
-    def get_result(self):
-        try:
-            return self.result
-        except Exception:
-            return None
-    def get_args(self):
-        return str(self.args[3])
 
 def getTargetInfo(community,target,port,NeighborName):
+    log.info(' Process Start To Get '+NeighborName + ' Information !')
     rt = equip_model.Router(community, target, port)
     dataJson, dataDict = rt.getAllInformation(whiteList=[])
+    log.info(' Process End !')
     return dataJson, dataDict
 
-def createThreads(community,target,port,inLevelNeighbor):
+def createThreads(community,port,inLevelNeighbor):
     threads = []
     for NeighborIP, NeighborName, NeighborSNID in inLevelNeighbor:
         if (NeighborName):
-            t = MyThread(target=getTargetInfo, args=(community,target,port,NeighborName))
+            t = thread_model.MyThread(target=getTargetInfo, args=(community,NeighborIP,port,NeighborName))
             threads.append(t)
     return threads
 
 log = log_model.OperationLog()
 @log.Detail2Log('DEBUG')
-def networkInfoDetect(community='1q3e!Q#E',target='10.46.79.126',port='161'):
+def networkInfoDetect(community=COMMUNITY,target=TARGET,port=PORT):
     rt = equip_model.Router(community, target, port)
     detection =rt.getName()
     snID = rt.getSNID()
@@ -43,9 +38,7 @@ def networkInfoDetect(community='1q3e!Q#E',target='10.46.79.126',port='161'):
     inLevelNeighbor = neighborDiscovery
     nextLevelNeighbor = []
     while inLevelNeighbor:
-        log.info('neighborDiscovery' + str(neighborDiscovery))
-        log.info('inLevelNeighbor' + str(inLevelNeighbor))
-        threads = createThreads(community, target, port, inLevelNeighbor)
+        threads = createThreads(community, port, inLevelNeighbor)
         for t in threads:
             t.start()
         for t in threads:
@@ -67,6 +60,7 @@ def networkInfoDetect(community='1q3e!Q#E',target='10.46.79.126',port='161'):
                     nextLevelNeighbor.append(router)
         inLevelNeighbor = nextLevelNeighbor
         nextLevelNeighbor = []
+    log.info('neighborDiscovery' + str(neighborDiscovery))
     log.resultPrint(str(neighborDiscovery))
     log.networkJsonPrint(json.dumps(networkDict, ensure_ascii=False, indent=4))
     to = table_model.OperationTable()
@@ -80,9 +74,9 @@ def networkInfoDetect(community='1q3e!Q#E',target='10.46.79.126',port='161'):
 
 def main():
     parser = argparse.ArgumentParser(description='本脚本通过snmp协议实现网络拓扑的发现与各路由器及活终端的监控')
-    parser.add_argument('-C', '--community', help='set target router snmp community',default='1q3e!Q#E')
-    parser.add_argument('-T', '--target', help='set target router ', default='10.46.79.126')
-    parser.add_argument('-P', '--port', help='set target router snmp port', default='161')
+    parser.add_argument('-C', '--community', help='set target router snmp community',default=COMMUNITY)
+    parser.add_argument('-T', '--target', help='set target router ', default=TARGET)
+    parser.add_argument('-P', '--port', help='set target router snmp port', default=PORT)
     args = parser.parse_args()
     log.info('start')
     #whiteList = log.getWhiteListIP('./test.log')

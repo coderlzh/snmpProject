@@ -1,6 +1,14 @@
 import IPy
 import json
-from utils import log_model
+from utils import log_model,equip_model,thread_model
+from configparser import ConfigParser
+
+CONFIGFILE = '../config/project.ini'
+config = ConfigParser()
+config.read(CONFIGFILE)
+COMMUNITY = config['detection'].get('Community')
+TARGET = config['detection'].get('Target')
+PORT = config['detection'].get('Port')
 
 log = log_model.OperationLog()
 
@@ -21,7 +29,60 @@ class OperationNetwork:
         self.macInformationDict = None
 
     @log.classFuncDetail2Log('DEBUG')
-    def getNetworkDict(self) -> dict:
+    def __getTargetInfo(self, community, target, port, neighborName):
+        log.info(' Process Start To Get ' + neighborName + ' Information !')
+        rt = equip_model.Router(community, target, port)
+        dataJson, dataDict = rt.getAllInformation(whiteList=[])
+        log.info(' Process End !')
+        return dataJson, dataDict
+
+    @log.classFuncDetail2Log('DEBUG')
+    def __createThreads(self,community, port, inLevelNeighbor):
+        threads = []
+        for NeighborIP, NeighborName, NeighborSNID in inLevelNeighbor:
+            if (NeighborName):
+                t = thread_model.MyThread(target=self.__getTargetInfo, args=(community, NeighborIP, port, NeighborName))
+                threads.append(t)
+        return threads
+
+    @log.classFuncDetail2Log('DEBUG')
+    def networkInfo_update(self):
+        rt = equip_model.Router(COMMUNITY, TARGET, PORT)
+        detection = rt.getName()
+        snID = rt.getSNID()
+        networkDict = {}
+        neighborDiscovery = [[TARGET, detection, snID]]
+        inLevelNeighbor = neighborDiscovery
+        nextLevelNeighbor = []
+        while inLevelNeighbor:
+            threads = self.__createThreads(COMMUNITY, PORT, inLevelNeighbor)
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+            for t in threads:
+                dataJson, dataDict = t.get_result()
+                networkDict[t.get_args()] = dataDict
+                for router in dataDict['neighborDict']['reachable']:
+                    if (router[2] in [i[2] for i in neighborDiscovery]):
+                        continue
+                    else:
+                        neighborDiscovery.append(router)
+                        nextLevelNeighbor.append(router)
+                for router in dataDict['neighborDict']['unreachable']:
+                    if (router in neighborDiscovery):
+                        continue
+                    else:
+                        neighborDiscovery.append(router)
+                        nextLevelNeighbor.append(router)
+            inLevelNeighbor = nextLevelNeighbor
+            nextLevelNeighbor = []
+        log.info(' neighborDiscovery' + str(neighborDiscovery))
+        log.resultPrint(str(neighborDiscovery))
+        log.networkJsonPrint(json.dumps(networkDict, ensure_ascii=False, indent=4))
+
+    @log.classFuncDetail2Log('DEBUG')
+    def networkDict_get(self) -> dict:
         """
         解析Json文本并返回采集到的全网信息
         :return: type=字典 data={sysName:设备信息}
@@ -63,7 +124,7 @@ class OperationNetwork:
         :return: type=str data=IP' Or 'NETWORK' Or 'Unvalid Param' Or 'SYSNAME'
         """
         if not self.networkDict:
-            self.networkDict =self.getNetworkDict()
+            self.networkDict =self.networkDict_get()
         if (self.checkIP(param)):
             if IPy.IP(param).netmask() != IPy.IP('255.255.255.255'):
                 return 'NETWORK'
@@ -84,7 +145,7 @@ class OperationNetwork:
         :return: type=None data=None
         """
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         for sysname, sysnameDict in self.networkDict.items():
             broadcastList = []
             #print(sysname)
@@ -122,7 +183,7 @@ class OperationNetwork:
         #print(json.dumps(self.vrrpDeviceStatic, ensure_ascii='utf-8', indent=4))
 
     @log.classFuncDetail2Log('DEBUG')
-    def getInformationOfparam(self, param: str, paramType: str) -> list:
+    def getInformationOfParam(self, param: str, paramType: str) -> list:
         """
         根据参数和参数类型获取参数对应的 设备名称,SNID,IP 用来在路径发现中进行一个路径的寻找
         :param param: type=str data=''
@@ -130,7 +191,7 @@ class OperationNetwork:
         :return: type= [str,str,str,str]
         """
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         if(paramType == 'IP'):
             if (param == '127.0.0.1' or param == '0.0.0.0'):
                 return ['', param, '', 'IP']
@@ -178,7 +239,7 @@ class OperationNetwork:
         :return: type=dict data={network:interfaceIP}
         """
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         netDeviceInformationDict = {}
         if(self.networkDict[sysname]['equipmentInterfaceInformation']):
             for InterfaceID, InterfaceDict in self.networkDict[sysname]['equipmentInterfaceInformation'].items():
@@ -193,7 +254,7 @@ class OperationNetwork:
         :return: type=dict data={network:{sysname:interfaceIP}}
         """
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         netInformationDict = {}
         for sysname, sysnameDict in self.networkDict.items():
             for key, routerDict in sysnameDict['equipmentRouterInformation'].items():
@@ -227,7 +288,7 @@ class OperationNetwork:
         :return: type=dict data={network:{sysname:interfaceIP}}
         """
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         netDirectInformationDict = {}
         for sysname, sysnameDict in self.networkDict.items():
             for interfaceID, interfaceDict in sysnameDict['equipmentInterfaceInformation'].items():
@@ -315,7 +376,7 @@ class OperationNetwork:
         :return: type=list data=[IPList, sysNameList, SNIDList, 0 Or 1]
         """
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         sysNameList = [sourceDict['Sysname']]
         IPList = [sourceDict['IP']]
         SNIDList = [sourceDict['SNID']]
@@ -344,7 +405,7 @@ class OperationNetwork:
             if not nextHop:
                 print('Route in %s to %s not found!' % (nextHopSysname, destinationDict['IP']))
                 return [IPList, sysNameList, SNIDList, 1]
-            nextHopSysname, nextHopIP, nextHopSNID, nextHopType = self.getInformationOfparam(nextHop ,'IP')
+            nextHopSysname, nextHopIP, nextHopSNID, nextHopType = self.getInformationOfParam(nextHop ,'IP')
             if not nextHopSysname or not nextHopIP or not nextHopSNID:
                 IPList.append(nextHopIP)
                 break
@@ -372,7 +433,7 @@ class OperationNetwork:
         :return: type=str,data=sysname
         """
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         try:
             for sysname, dataDict in self.networkDict.items():
                 if (param == sysname):
@@ -383,19 +444,19 @@ class OperationNetwork:
     @log.classFuncDetail2Log('DEBUG')
     def tracertToDestination(self,sourceDict,destinationType,destination):
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         minimumIPList = []
         minimumsysNameList = []
         minimumSNIDList = []
         minStep = 255
         if destinationType == 'IP':
-            destinationSysname, destinationIP, destinationSNID, destinationType = self.getInformationOfparam(
+            destinationSysname, destinationIP, destinationSNID, destinationType = self.getInformationOfParam(
                 destination, 'IP')
             destinationDict = {'Sysname': destinationSysname, 'IP': destinationIP, 'SNID': destinationSNID}
             minimumIPList, minimumsysNameList, minimumSNIDList, resultType = self.pathTraceIP(sourceDict,
                                                                                               destinationDict)
         elif destinationType == 'NETWORK':
-            destinationSysname, destinationIP, destinationSNID, destinationType = self.getInformationOfparam(
+            destinationSysname, destinationIP, destinationSNID, destinationType = self.getInformationOfParam(
                 destination, 'NETWORK')
             for i in range(len(destinationIP)):
                 print('选取目标设备IP，当前设置目的IP为%s，设备名称为%s：' % (destinationIP[i], destinationSysname[i]))
@@ -411,7 +472,7 @@ class OperationNetwork:
                 print('目标%s不可达，请检查路由配置。' % (destination))
                 return minimumIPList, minimumsysNameList, minimumSNIDList
         else:
-            destinationSysname, destinationIP, destinationSNID, destinationType = self.getInformationOfparam(
+            destinationSysname, destinationIP, destinationSNID, destinationType = self.getInformationOfParam(
                 destination, 'SYSNAME')
             print(destinationIP)
             for i in range(len(destinationIP)):
@@ -434,19 +495,19 @@ class OperationNetwork:
         print('正在寻找 %s 到 %s 经过的设备......' % (source, destination))
         result = []
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         sourceType = self.checkTypeOfParam(source)
-        #def getInformationOfparam(self, param, paramType, networkDict)
+        #def getInformationOfParam(self, param, paramType, networkDict)
         destinationType = self.checkTypeOfParam(destination)
         if sourceType == 'IP':
-            sourceSysname, sourceIP, sourceSNID, sourceType = self.getInformationOfparam(source,
+            sourceSysname, sourceIP, sourceSNID, sourceType = self.getInformationOfParam(source,
                                                                                          self.checkTypeOfParam(source))
             sourceDict = {'Sysname': sourceSysname, 'IP': sourceIP, 'SNID': sourceSNID}
             return self.tracertToDestination(sourceDict, destinationType, destination)
         elif sourceType == 'NETWORK':
             NetDirectInformationBeSelected = self.getNetDirectInformationBeSelected(
                 source)
-            sourceSysname, sourceIP, sourceSNID, sourceType = self.getInformationOfparam(source,
+            sourceSysname, sourceIP, sourceSNID, sourceType = self.getInformationOfParam(source,
                                                                                          self.checkTypeOfParam(source))
             NetDirectInformationBeSelected = self.getNetDirectInformationBeSelected(
                 destination)
@@ -459,7 +520,7 @@ class OperationNetwork:
                 result.append(self.tracertToDestination(sourceDict, destinationType, destination))
             return result
         else:
-            sourceSysname, sourceIP, sourceSNID, sourceType = self.getInformationOfparam(source,
+            sourceSysname, sourceIP, sourceSNID, sourceType = self.getInformationOfParam(source,
                                                                                          self.checkTypeOfParam(source))
 
             sourceDict = {'Sysname': sourceSysname, 'IP': sourceIP[0], 'SNID': sourceSNID}
@@ -601,7 +662,7 @@ class OperationNetwork:
         if not self.edgeNetInformationDict:
             self.edgeNetInformationDict = self.getEdgeNetInformationDict()
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         if not self.macInformationDict:
             self.macInformationDict = self.getMacInfromationDict()
         for network, netDict in self.edgeNetInformationDict.items():
@@ -658,7 +719,7 @@ class OperationNetwork:
         if not self.netDirectInformationDict:
             self.netDirectInformationDict = self.getNetDirectInformationFromDict()
         if not self.networkDict:
-            self.networkDict = self.getNetworkDict()
+            self.networkDict = self.networkDict_get()
         if not self.macInformationDict:
             self.macInformationDict = self.getMacInfromationDict()
         for key in self.netDirectInformationDict:
@@ -814,23 +875,24 @@ class OperationNetwork:
 
 
 def main():
-    net = OperationNetwork('./networkInformation.txt')
-    net.getVrrpDeviceDict()
-    netDirectInformation = net.getNetDirectInformationFromDict()
+    net = OperationNetwork('../logs/networkInformation.txt')
+    net.networkInfo_update()
+    #net.getVrrpDeviceDict()
+    # netDirectInformation = net.getNetDirectInformationFromDict()
     #net.getNetInformationFromDict()
     #print(net.getDeviceConnectedDict("ZYZX-WS-C05-DMZ-S9306-1",netDirectInformation))
     #print(json.dumps(net.getEdgeNetInformationDict(), ensure_ascii='utf-8', indent=4))
     #net.getEdgeDeviceInformationDict()
-    net.getNetDeviceInformationTreeDict()
+    #net.getNetDeviceInformationTreeDict()
     #print(net.checkTypeOfParam('127.0.0.0/8'))
-    #print(json.dumps(net.getNetDeviceInformationDict(), ensure_ascii='utf-8', indent=4))
+    print(json.dumps(net.getNetDeviceInformationTreeDict(), ensure_ascii='utf-8', indent=4))
     #print(json.dumps(net.getEdgeDeviceInformationDict(), ensure_ascii='utf-8', indent=4))
     #print(json.dumps(net.getNetDirectInformationFromDict(), ensure_ascii='utf-8', indent=4))
     #print(json.dumps(net.getNetDirectInformationBeSelected("10.47.146.128/29"), ensure_ascii='utf-8', indent=4))
     #print(json.dumps(net.getDeviceNetInformationFromDict('FZFJ-WS-1F-C12-OA-CORE-NE40E-1'), ensure_ascii='utf-8',indent=4))
     #print(json.dumps(net.vrrpDeviceStatic, ensure_ascii='utf-8', indent=4))
-    param1 = 'FJFZ-SJ-CORE-4Fnan-E27-S9306-1'
-    param2 = 'FJFZ-SJ-CORE-4Fnan-E28-S9306-2'
+    # param1 = 'FJFZ-SJ-CORE-4Fnan-E27-S9306-1'
+    # param2 = 'FJFZ-SJ-CORE-4Fnan-E28-S9306-2'
     #net.compareDevicesLevel(param1,param2,netDirectInformation)
     #print(net.compareDevicesLevel('FJFZ-RJY-CORE-CLOUD-D05-S9310-1', 'FJFZ-RJY-CORE-D05/D06-H3C7610',netDirectInformation))
     #print(net.compareDevicesLevel('FJFZ-SJ-CORE-4Fnan-E27-S9306-1', 'FJFZ-SJ-CORE-4Fnan-E28-S9306-2',netDirectInformation))

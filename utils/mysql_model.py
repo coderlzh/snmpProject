@@ -1,6 +1,19 @@
 # connect_db：连接数据库，并操作数据库
 import pymysql
 from utils import log_model
+from configparser import ConfigParser
+
+
+CONFIGFILE = '../config/project.ini'
+config = ConfigParser()
+config.read(CONFIGFILE)
+
+
+Host = config['mysql'].get('Host')
+Port = config['mysql'].get('Port')
+Name = config['mysql'].get('Name')
+Password = config['mysql'].get('Password')
+Database = config['mysql'].get('Database')
 
 log = log_model.OperationLog()
 class OperationMysql:
@@ -8,11 +21,11 @@ class OperationMysql:
     def __init__(self):
         # 创建一个连接数据库的对象
         self.conn = pymysql.connect(
-            host='127.0.0.1',  # 连接的数据库服务器主机名
-            port=3306,  # 数据库端口号
-            user='root',  # 数据库登录用户名
-            passwd='root',
-            db='test',  # 数据库名称
+            host=Host,  # 连接的数据库服务器主机名
+            port=eval(Port),  # 数据库端口号
+            user=Name,  # 数据库登录用户名
+            passwd=Password,
+            db=Database,  # 数据库名称
             charset='utf8',  # 连接编码
             cursorclass=pymysql.cursors.DictCursor
         )
@@ -45,16 +58,16 @@ class OperationMysql:
             self.conn.rollback()
         self.conn.close()  # 记得关闭数据库连接
 
-    @log.classFuncDetail2Log('DEBUG')
-    def updata_all(self, sql, data):
-        try:
-            self.cur.executemany(sql,data)  # 执行sql
-            self.conn.commit()  # 增删改操作完数据库后，需要执行提交操作
-        except Exception as e:
-            # 发生错误时回滚
-            print(e)
-            self.conn.rollback()
-        self.conn.close()  # 记得关闭数据库连接
+    # @log.classFuncDetail2Log('DEBUG')
+    # def updata_all(self, sql, data):
+    #     try:
+    #         self.cur.executemany(sql,data)  # 执行sql
+    #         self.conn.commit()  # 增删改操作完数据库后，需要执行提交操作
+    #     except Exception as e:
+    #         # 发生错误时回滚
+    #         print(e)
+    #         self.conn.rollback()
+    #     self.conn.close()  # 记得关闭数据库连接
 
 
     # 插入SQL

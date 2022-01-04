@@ -288,7 +288,6 @@ class Router(Equipment):
         resultIP['reachable'] = []
         threads = []
         def functest(community, target, port):
-            #这个函数出了点问题 他不能实现真正的多线程
             rt = Router(community, target, port)
             nexthopID = None
             nexthopName = rt.getName()

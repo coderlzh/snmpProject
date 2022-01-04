@@ -13,7 +13,7 @@ def DBNetworkInfoFlush():
     kf = kafka_model.OperationKafka()
     producer = kf.createKafkaProducer('10.46.97.234:9092')
     Time = tool_model.getTime()
-    producer.send('network', value={'timestamp': Time,'targetFunc':'networkInfoDetect/networkInfoDetect','param':{}})
+    producer.send('network', value={'timestamp': Time,'targetFunc':'networkInfoAbility/networkInfoDetect','param':{}})
     ren = {'code': 200, 'msg': '正在完整更新网络设备信息表，更新完毕将以短信形式通知'}
     return json.dumps(ren, ensure_ascii=False)
 

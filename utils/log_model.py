@@ -73,7 +73,7 @@ class OperationLog:
         if(Priority > 2):
             return
         filePath = FilePath + "snmp-python" + tool_model.getDate() + '.log'
-        string = '[' + tool_model.getTime() + '] INFO ||' + string
+        string = '[' + tool_model.getTime() + '] INFO || ' + string
         print(string)
         try:
             with open(filePath, 'a+') as f:
@@ -87,7 +87,7 @@ class OperationLog:
         if(Priority > 1):
             return
         filePath = FilePath + "snmp-python" + tool_model.getDate() + '.log'
-        string = '[' + tool_model.getTime() + '] DEBUG ||' + string
+        string = '[' + tool_model.getTime() + '] DEBUG || ' + string
         print(string)
         try:
             with open(filePath, 'a+') as f:
@@ -101,7 +101,7 @@ class OperationLog:
         if(Priority > 3):
             return
         filePath = FilePath + "snmp-python" + tool_model.getDate() + '.log'
-        string = '[' + tool_model.getTime() + '] WARN ||' + string
+        string = '[' + tool_model.getTime() + '] WARN || ' + string
         print(string)
         try:
             with open(filePath, 'a+') as f:
@@ -115,7 +115,7 @@ class OperationLog:
         if(Priority > 4):
             return
         filePath = FilePath + "snmp-python" + tool_model.getDate() + '.log'
-        string = '[' + tool_model.getTime() + '] ERROR ||' + string
+        string = '[' + tool_model.getTime() + '] ERROR || ' + string
         print(string)
         try:
             with open(filePath, 'a+') as f:
@@ -127,7 +127,7 @@ class OperationLog:
 
     def critical(self, string):
         filePath = FilePath + "snmp-python" + tool_model.getDate() + '.log'
-        string = '[' + tool_model.getTime() + '] CRITICAL ||' + string
+        string = '[' + tool_model.getTime() + '] CRITICAL || ' + string
         print(string)
         try:
             with open(filePath, 'a+') as f:

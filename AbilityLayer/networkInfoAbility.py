@@ -22,7 +22,7 @@ log = log_model.OperationLog()
 def hostListPOST():
     hostList = []
     net = network_model.OperationNetwork('../logs/networkInformation.txt')
-    #net.networkInfo_update()
+    net.networkInfo_update()
     netDeviceInformationDict,_ = net.getNetDeviceInformationTreeDict()
     """
     [

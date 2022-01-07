@@ -932,64 +932,78 @@
 # sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 
-def gen_func():
-    a = yield 1
-    print("a: ", a)
-    b = yield 2
-    print("b: ", b)
-    c = yield 3
-    print("c: ", c)
-    return "finish"
+# def gen_func():
+#     a = yield 1
+#     print("a: ", a)
+#     b = yield 2
+#     print("b: ", b)
+#     c = yield 3
+#     print("c: ", c)
+#     return "finish"
+#
+#
+# if __name__ == '__main__':
+#     gen = gen_func()
+#     for i in range(4):
+#         if i == 0:
+#             print(gen.send(None))
+#         else:
+#             # 因为gen生成器里面只有三个yield，那么只能循环三次。
+#             # 第四次循环的时候,生成器会抛出StopIteration异常,并且return语句里面内容放在StopIteration异常里面
+#             try:
+#                 print(gen.send(4-i))
+#             except StopIteration as e:
+#                 print("e: ", e)
+# """
+#     这是一个写给基础比较薄弱的开发者的注释，假如您并不了解@classmethod这类装饰器的用法，这篇注释可以为您解答疑惑。
+#     在类中被声明的函数，要在实例化之后才能够被调用，例如：
+#     #>>>table = Table()
+#     #>>>table.func_be_mentioned()
+#     如果您尝试直接使用Table.func_be_mentioned的方法，在我的测试之下事实上不会有任何问题...只要参数正确，
+#     函数可以被正确执行，但是在实例化类的时候需要指定类作为第一个参数。
+#     如果要说有什么一定要使用@classmethod的原因，我想我会给出的答案是：标准且更加优美的表达。
+#     假设一个类实例化之前需要对参数进行解析才能够实现，例如（一个经典的例子）：
+#     class Date(object):
+#         def __init__(self, day=0, month=0, year=0):
+#             self.day = day
+#             self.month = month
+#             self.year = year
+#     在实例化这个类时，您收到的对端消息格式为"2021-12-16"。因此，在实例化之前我们要对字符串进行相应的解析，依据编码习惯（最基础的），
+#     我们会将解析代码包装为一个函数。
+#     def from_string(date_as_string):
+#         day, month, year = map(int, date_as_string.split('-'))
+#         return day, month, year
+#     date1 = Date(day, month, year)
+#     使用该方法我们可以成功进行类的实例化。但是在我们的代码结构中就会出现一个类外的函数（我们暂且称之为野函数）。
+#     这个函数对于程序的正确性没有任何影响，但他也会带来一些问题：
+#     在别的模块引入类的时候，这个函数对于别的模块是不可见的，需要进行额外的引入，假如协作的开发者初心大意没有进行额外的检查的话，
+#     可以预见的结果会是在您的协同者的代码模块里，类似的格式解析函数又会被实现一遍。（当然这仍然只是一个非常非常微不足道的优点）
+#     同时，对于需要使用到类中声明的函数参与野函数的构成时，使用@classmethod会是您更好的选择。
+#     所以我推荐使用如下方法进行此类函数的编写与实例化：
+#     class Date(object):
+#         def __init__(self, day=0, month=0, year=0):
+#             self.day = day
+#             self.month = month
+#             self.year = year
+#         @classmethod
+#         def from_string(cls, date_as_string):
+#             day, month, year = map(int, date_as_string.split('-'))
+#             date1 = cls(day, month, year)
+#             return date1
+#     date2 = Date.from_string('11-09-2012')
+#     ^_^祝您编码愉快。
+# """
+import threading
+import time
+
+sem = threading.Semaphore(1)  # 限制线程的最大数量为4个
 
 
-if __name__ == '__main__':
-    gen = gen_func()
-    for i in range(4):
-        if i == 0:
-            print(gen.send(None))
-        else:
-            # 因为gen生成器里面只有三个yield，那么只能循环三次。
-            # 第四次循环的时候,生成器会抛出StopIteration异常,并且return语句里面内容放在StopIteration异常里面
-            try:
-                print(gen.send(4-i))
-            except StopIteration as e:
-                print("e: ", e)
-"""
-    这是一个写给基础比较薄弱的开发者的注释，假如您并不了解@classmethod这类装饰器的用法，这篇注释可以为您解答疑惑。
-    在类中被声明的函数，要在实例化之后才能够被调用，例如：
-    #>>>table = Table()
-    #>>>table.func_be_mentioned()
-    如果您尝试直接使用Table.func_be_mentioned的方法，在我的测试之下事实上不会有任何问题...只要参数正确，
-    函数可以被正确执行，但是在实例化类的时候需要指定类作为第一个参数。
-    如果要说有什么一定要使用@classmethod的原因，我想我会给出的答案是：标准且更加优美的表达。
-    假设一个类实例化之前需要对参数进行解析才能够实现，例如（一个经典的例子）：
-    class Date(object):
-        def __init__(self, day=0, month=0, year=0):
-            self.day = day
-            self.month = month
-            self.year = year
-    在实例化这个类时，您收到的对端消息格式为"2021-12-16"。因此，在实例化之前我们要对字符串进行相应的解析，依据编码习惯（最基础的），
-    我们会将解析代码包装为一个函数。
-    def from_string(date_as_string):
-        day, month, year = map(int, date_as_string.split('-'))
-        return day, month, year
-    date1 = Date(day, month, year)
-    使用该方法我们可以成功进行类的实例化。但是在我们的代码结构中就会出现一个类外的函数（我们暂且称之为野函数）。
-    这个函数对于程序的正确性没有任何影响，但他也会带来一些问题：
-    在别的模块引入类的时候，这个函数对于别的模块是不可见的，需要进行额外的引入，假如协作的开发者初心大意没有进行额外的检查的话，
-    可以预见的结果会是在您的协同者的代码模块里，类似的格式解析函数又会被实现一遍。（当然这仍然只是一个非常非常微不足道的优点）
-    同时，对于需要使用到类中声明的函数参与野函数的构成时，使用@classmethod会是您更好的选择。
-    所以我推荐使用如下方法进行此类函数的编写与实例化：
-    class Date(object):
-        def __init__(self, day=0, month=0, year=0):
-            self.day = day
-            self.month = month
-            self.year = year
-        @classmethod
-        def from_string(cls, date_as_string):
-            day, month, year = map(int, date_as_string.split('-'))
-            date1 = cls(day, month, year)
-            return date1
-    date2 = Date.from_string('11-09-2012')
-    ^_^祝您编码愉快。
-"""
+def gothread():
+    with sem:  # 锁定线程的最大数量
+        for i in range(1000):
+            print(threading.current_thread().name)
+
+
+for i in range(10):
+    threading.Thread(target=gothread).start()

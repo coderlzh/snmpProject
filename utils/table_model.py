@@ -305,9 +305,9 @@ class OperationTable:
             #print(res)
 
         def networkInfoPOST(data):
-            sql = "insert into network_info (UNIQUEID,NETWORK,IP,SYSNAME,MAC,PRODUCER,IPTYPE,HEARTBEATTIME,STATUS) \
+            sql = "insert into network_info (UNIQUEID,NETWORK,IP,SYSNAME,MAC,PRODUCER,IPTYPE,HEARTBEATTIME,USAGE_STATUS) \
             values (%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE \
-            UNIQUEID=VALUES(UNIQUEID),NETWORK=VALUES(NETWORK),IP=VALUES(IP),SYSNAME=VALUES(SYSNAME),MAC=VALUES(MAC),PRODUCER=VALUES(PRODUCER),IPTYPE=VALUES(IPTYPE),HEARTBEATTIME=VALUES(HEARTBEATTIME),STATUS=VALUES(STATUS)"
+            UNIQUEID=VALUES(UNIQUEID),NETWORK=VALUES(NETWORK),IP=VALUES(IP),SYSNAME=VALUES(SYSNAME),MAC=VALUES(MAC),PRODUCER=VALUES(PRODUCER),IPTYPE=VALUES(IPTYPE),HEARTBEATTIME=VALUES(HEARTBEATTIME),USAGE_STATUS=VALUES(USAGE_STATUS)"
             #print(sql)
             Operation = mysql_model.OperationMysql()
             res = Operation.insert_all(sql, data)
@@ -345,13 +345,13 @@ class OperationTable:
                         iList = i.split('/ ')
                         data.append([network+IP+iList[0],network,IP,'']+iList+['0'])
 
-        def statusUPDATE(table):
-            sql = "update %s set status = 1"%(table)
+        def statusUPDATE(table,column):
+            sql = "update %s set %s = 0"%(table,column)
             Operation = mysql_model.OperationMysql()
             res = Operation.updata_one(sql)
             return res
-        statusUPDATE('network_info')
-        statusUPDATE('network_info_dict')
+        statusUPDATE('network_info','usage_status')
+        statusUPDATE('network_info_dict','status')
         net = network_model.OperationNetwork('../logs/networkInformation.txt')
         netDeviceInformationDict,superNetworkInformationDict = net.getNetDeviceInformationTreeDict()
         data = []
@@ -361,7 +361,7 @@ class OperationTable:
         heartBeatTime = getTime()
         for i in data:
             i.append(heartBeatTime)
-            i.append(2)
+            i.append(1)
         networkInfoDictPOST(data)
         data = []
         changeNetDeviceInfo2data(netDeviceInformationDict)
@@ -369,7 +369,7 @@ class OperationTable:
         infoUpdateList, infoInsertList = getDiffDataList(databaseInfoDict, data)
         for i in data:
             i.append(heartBeatTime)
-            i.append(2)
+            i.append(1)
         networkInfoPOST(data)
         return dictUpdateList,dictInsertList,infoUpdateList, infoInsertList
 

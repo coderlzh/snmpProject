@@ -1,5 +1,6 @@
 import IPy
 import json
+import threading
 from utils import log_model,equip_model,thread_model
 from configparser import ConfigParser
 
@@ -11,7 +12,7 @@ TARGET = config['detection'].get('Target')
 PORT = config['detection'].get('Port')
 
 log = log_model.OperationLog()
-
+sem=threading.Semaphore(4) #限制线程的最大数量为4个
 class OperationNetwork:
     """
     网络相关操作
@@ -30,11 +31,12 @@ class OperationNetwork:
 
     @log.classFuncDetail2Log('DEBUG')
     def __getTargetInfo(self, community, target, port, neighborName):
-        log.info(' Process Start To Get ' + neighborName + ' Information !')
-        rt = equip_model.Router(community, target, port)
-        dataJson, dataDict = rt.getAllInformation(whiteList=[])
-        log.info(' Process End !')
-        return dataJson, dataDict
+        with sem:
+            log.info(' Process Start To Get ' + neighborName + ' Information !')
+            rt = equip_model.Router(community, target, port)
+            dataJson, dataDict = rt.getAllInformation(whiteList=[])
+            log.info(' Process End !')
+            return dataJson, dataDict
 
     @log.classFuncDetail2Log('DEBUG')
     def __createThreads(self,community, port, inLevelNeighbor):

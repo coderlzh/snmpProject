@@ -1,12 +1,13 @@
 import json
 from abc import ABC, abstractmethod
 import IPy
+import threading
 from utils import log_model, snmp_model, thread_model
 
 
 
 log = log_model.OperationLog()
-
+sem=threading.Semaphore(4) #限制线程的最大数量为4个
 
 class Equipment(ABC):
     """
@@ -288,12 +289,13 @@ class Router(Equipment):
         resultIP['reachable'] = []
         threads = []
         def functest(community, target, port):
-            rt = Router(community, target, port)
-            nexthopID = None
-            nexthopName = rt.getName()
-            if nexthopName:
-                nexthopID = rt.getSNID()
-            return nexthopName,nexthopID,target
+            with sem:
+                rt = Router(community, target, port)
+                nexthopID = None
+                nexthopName = rt.getName()
+                if nexthopName:
+                    nexthopID = rt.getSNID()
+                return nexthopName,nexthopID,target
         tempList = []
         for i in range(len(self.routeInformationDict)):
             if (self.routeInformationDict[str(i)]['routerNextHop'] == '0.0.0.0' or self.routeInformationDict[str(i)][
